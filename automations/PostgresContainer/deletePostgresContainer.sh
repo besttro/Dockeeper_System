@@ -2,6 +2,7 @@
 
 CONTAINER_NAME="dockeeper.postgres"
 
+# Check container exists
 if [ "$(docker ps -a -q -f name=${CONTAINER_NAME})" ]; then
     echo "Delete Container '$CONTAINER_NAME'..."
     docker rm -f "$CONTAINER_NAME"
