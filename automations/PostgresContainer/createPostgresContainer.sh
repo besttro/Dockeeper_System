@@ -2,9 +2,9 @@
 
 CONTAINER_NAME="dockeeper.postgres"
 
-
+# Check container exists
 if [ "$(docker ps -a -q -f name=^/${CONTAINER_NAME}$)" ]; then
-    # ถ้า container มีอยู่แล้ว
+    # If container exists
     if [ "$(docker ps -q -f name=^/${CONTAINER_NAME}$)" ]; then
         echo "Container '$CONTAINER_NAME' is already running."
     else
