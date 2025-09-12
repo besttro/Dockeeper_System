@@ -1,3 +1,5 @@
+// ใช้สำหรับเชื่อมต่อกับฐานข้อมูล PostgreSQL โดยใช้ Pool จากไลบรารี pg
+
 import { Pool } from "pg";
 
 if (!process.env.DATABASE_URL) {
