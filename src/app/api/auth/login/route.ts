@@ -5,8 +5,10 @@ import jwt from "jsonwebtoken";
 
 export async function POST(req: Request) {
     try {
+        // Get Email, Passwrod from Request
         const { email, password } = await req.json();
 
+        // Check Email in PostgreSql
         const user = await prisma.user.findUnique({where: { email }});
         if (!user) {
             return NextResponse.json(

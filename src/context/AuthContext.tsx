@@ -1,10 +1,11 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 type AuthContextType = {
     user: string | null;
     token: string | null;
+    isAuthenticated: boolean;
     login: (email: string, password: string) => void;
     logout: () => void;
 }
@@ -14,6 +15,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<string | null>(null);
     const [token, setToken] = useState<string | null>(null);
+
+    const isAuthenticated = !!token;
 
     const login = async (email: string, password: string) => {
         try {
@@ -30,7 +33,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
             setUser(email);
             setToken(data.token);
-            console.log("Login successful");
+            localStorage.setItem('token', data.token);
 
         } catch (error) {
             console.error("Login error:", error);
@@ -40,9 +43,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const logout = () => {
         setUser(null);
         setToken(null);
+        localStorage.removeItem('token');
     };
 
-    const value = { user, token, login, logout };
+    useEffect(() => {
+        const storedToken = localStorage.getItem('token');
+        if (storedToken) {
+            setToken(storedToken);
+        }
+    }, [])
+
+    const value = { user, token, isAuthenticated,login, logout };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
