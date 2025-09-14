@@ -7,10 +7,6 @@ export async function GET() {
     return NextResponse.json(users);
   } catch (error: any) {
     console.error("❌ Prisma error:", error);
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
-
