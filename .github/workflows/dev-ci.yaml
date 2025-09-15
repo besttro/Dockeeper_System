@@ -75,7 +75,7 @@ jobs:
         run: rm -rf .next node_modules
 
       - name: Install production dependencies only
-        run: npm ci --only=production
+        run: npm ci --omit=dev
 
       - name: Generate Prisma client
         run: npx prisma generate
