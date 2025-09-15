@@ -51,4 +51,4 @@ jobs:
         run: npx prisma migrate status
 
       - name: Build Project
-        run: next build
+        run: npm run build
