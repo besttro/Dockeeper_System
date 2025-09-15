@@ -20,7 +20,7 @@ jobs:
         options: --health-cmd="pg_isready -U postgres" --health-interval=10s --health-timeout=5s --health-retries=5
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testDB
-      NODE_ENV: development
+      NODE_ENV: production
     
     steps:
       - name: Checkout repository
@@ -44,5 +44,8 @@ jobs:
       - name: Run migrations
         run: npx prisma migrate deploy
 
+      - name: Check DB migrations status
+        run: npx prisma migrate status
+
       - name: Build Project
-        run: npm run build
+        run: next build
