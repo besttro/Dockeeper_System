@@ -20,7 +20,7 @@ jobs:
         options: --health-cmd="pg_isready -U postgres" --health-interval=10s --health-timeout=5s --health-retries=5
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testDB
-      NODE_ENV: development
+      NODE_ENV: production
     
     steps:
       - name: Checkout repository
@@ -31,7 +31,7 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
-      
+
       - name: Clean project
         run: rm -rf .next node_modules
           
@@ -43,6 +43,15 @@ jobs:
 
       - name: Lint code
         run: npm run lint
+
+      - name: Check for invalid <Html> usage
+        run: |
+          if grep -r --exclude-dir={node_modules,.next,build} "import.*Html.*from 'next/document'" .; then
+            echo "❌ Found invalid import of Html from next/document"
+            exit 1
+          else
+            echo "✅ No invalid Html import found"
+          fi
 
       - name: Generate Prisma client
         run: npx prisma generate
