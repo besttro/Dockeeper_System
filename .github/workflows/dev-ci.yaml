@@ -35,6 +35,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Check ESLint version
+        run: npx eslint --version
+
       - name: Lint code
         run: npm run lint
 
