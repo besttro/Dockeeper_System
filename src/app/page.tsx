@@ -145,7 +145,7 @@ export default function HomePage() {
             </Typography>
           </Box>
         </Box>
-        <h1>Reserach Area</h1>
+        <h1>Reserach Cotainer Area</h1>
       </Box>
     </Box>
   );
