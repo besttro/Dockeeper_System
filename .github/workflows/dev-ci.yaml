@@ -31,12 +31,14 @@ jobs:
 
       - name: Check for invalid <Html> usage
         run: |
-          if grep -r --exclude-dir={node_modules,.next,build} "import.*Html.*from 'next/document'" .; then
-            echo "❌ Found invalid import of Html from next/document"
-            exit 1
-          else
-            echo "✅ No invalid Html import found"
-          fi
+            if grep -r --exclude-dir={node_modules,.next,build,.vs,.github} \
+                --include=*.{js,ts,tsx} \
+                "import.*Html.*from 'next/document'" src/; then
+                echo "❌ Found invalid import of Html from next/document"
+                exit 1
+            else
+                echo "✅ No invalid Html import found"
+            fi
 
   # Job 2: Build (if lint pass)
   build:
@@ -86,3 +88,5 @@ jobs:
 
       - name: Build Project
         run: npm run build
+        env:
+          NODE_ENV: production
