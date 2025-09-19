@@ -8,10 +8,82 @@ datasource db {
 }
 
 model User {
-  id    Int    @id @default(autoincrement())
-  name  String
-  email String @unique
+  user_id       Int    @id @default(autoincrement())
+  user_username String
+  user_password String
+  mem_id        Int
 
-  @@map("users") // maps Prisma model User → table "users"
+  // Relations
+  member        Member @relation(fields: [mem_id], references: [mem_id])
+  participations Participation[]
+  files         File[]
+  records       Record[]
+}
+
+model Publication {
+  pub_id     Int    @id @default(autoincrement())
+  pub_title  String
+  pub_year   Int
+  pub_status Int 
+
+  // Relations
+  participations Participation[]
+  manages        Manage[]
+  files          File[]
+}
+
+model Participation {
+  part_id     Int @id @default(autoincrement())
+  pub_id      Int
+  user_id     Int
+  part_status Int  
+
+  // Relations
+  publication Publication @relation(fields: [pub_id], references: [pub_id])
+  user        User        @relation(fields: [user_id], references: [user_id])
+}
+
+model Member {
+  mem_id    Int    @id @default(autoincrement())
+  mem_fname String
+  mem_lname String
+  mem_phone String
+  mem_email String
+  mem_type  Int
+
+  // Relations
+  users User[]
+}
+
+model Manage {
+  manage_id     Int    @id @default(autoincrement())
+  manage_detail String
+  manage_date   DateTime
+  manage_type   Int
+  pub_id        Int
+
+  // Relations
+  publication Publication @relation(fields: [pub_id], references: [pub_id])
+}
+
+model File {
+  file_id    Int    @id @default(autoincrement())
+  file_name  String
+  file_attach String
+  user_id    Int
+  pub_id     Int
+
+  // Relations
+  user        User        @relation(fields: [user_id], references: [user_id])
+  publication Publication @relation(fields: [pub_id], references: [pub_id])
+}
+
+model Record {
+  record_id  Int      @id @default(autoincrement())
+  login_time DateTime
+  user_id    Int
+
+  // Relations
+  user User @relation(fields: [user_id], references: [user_id])
 }
 
