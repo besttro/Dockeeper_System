@@ -18,12 +18,27 @@ export default function LoginForm() {
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const router = useRouter();
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = true; // สมมติ login สำเร็จ
-    if (success) {
-      router.push("/index");
+
+    try {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        router.push("/index"); // navigate to home page
+      } else {
+        setError("Email หรือ Password ไม่ถูกต้อง");
+      }
+    } catch (err) {
+      setError("เกิดข้อผิดพลาด");
     }
   };
 
@@ -45,7 +60,7 @@ export default function LoginForm() {
         Login
       </Typography>
 
-      <Box component="form" onSubmit={handleSubmit}>
+      <Box component="form" onSubmit={handleLogin}>
         {/* Email */}
         <TextField
           label="Email"
