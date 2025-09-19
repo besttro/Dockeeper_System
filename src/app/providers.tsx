@@ -11,6 +11,12 @@ const theme = createTheme({
     secondary: {
       main: "#f50057", // ชมพู
     },
+    success: {
+      main: "#028443", // เขียว
+    },
+    info: { 
+      main: "#0051FF" 
+    }
   },
 });
 

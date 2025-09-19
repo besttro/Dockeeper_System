@@ -20,14 +20,16 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
-    <Providers>
-      <div className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {children}
-      </div>
-    </Providers>
+    <html lang="en">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <Providers>
+          {children} {/* children = content ของแต่ละ page */}
+        </Providers>
+      </body>
+    </html>
   );
 }
