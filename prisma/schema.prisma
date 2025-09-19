@@ -9,7 +9,7 @@ datasource db {
 
 model User {
   user_id       Int    @id @default(autoincrement())
-  user_username String
+  user_email    String
   user_password String
   mem_id        Int
 
@@ -24,7 +24,7 @@ model Publication {
   pub_id     Int    @id @default(autoincrement())
   pub_title  String
   pub_year   Int
-  pub_status Int 
+  pub_status Int
 
   // Relations
   participations Participation[]
@@ -48,7 +48,6 @@ model Member {
   mem_fname String
   mem_lname String
   mem_phone String
-  mem_email String
   mem_type  Int
 
   // Relations
@@ -86,4 +85,3 @@ model Record {
   // Relations
   user User @relation(fields: [user_id], references: [user_id])
 }
-
