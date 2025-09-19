@@ -1,10 +1,6 @@
 "use client";
+import {redirect} from 'next/navigation'; 
 
 export default function HomePage() {
-
-  return (
-    <h1>this is main page</h1>
-  );
+  redirect('/index');
 }
-
-

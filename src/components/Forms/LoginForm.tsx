@@ -11,15 +11,20 @@ import {
   Paper,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { useRouter } from "next/navigation";
 
 export default function LoginForm() {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
-    console.log("Email:", email, "Password:", password);
+    const success = true; // สมมติ login สำเร็จ
+    if (success) {
+      router.push("/index");
+    }
   };
 
   return (
