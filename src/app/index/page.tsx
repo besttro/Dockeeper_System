@@ -35,7 +35,16 @@ export default function HomePage() {
       try {
         const res = await fetch("/api/publication");
         const data = await res.json();
-        setPublications(data);
+        console.log("data from API:", data);
+
+        // ปรับตรงนี้
+        if (Array.isArray(data)) {
+          setPublications(data);
+        } else if (Array.isArray(data.publications)) {
+          setPublications(data.publications);
+        } else {
+          setPublications([]); // fallback กันพัง
+        }
       } catch (err) {
         console.error("Error fetching publications", err);
       }
