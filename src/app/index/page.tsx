@@ -1,45 +1,48 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   Button,
-  Paper,
   TextField,
   Typography,
-  Divider,
   IconButton,
   Link,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
+  Avatar,
 } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import Slidebar from "@/components/Slidebar";
 
+type Publication = {
+  id: number;
+  title: string;
+  authors: string;
+  date: string;
+  summary: string;
+};
+
 export default function HomePage() {
   const [search, setSearch] = useState("");
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [publications, setPublications] = useState<Publication[]>([]);
 
-  //mock data publication
-  const publications = [
-    {
-      id: 1,
-      title: "Research on AI in Education",
-      authors: "John Doe, Jane Smith",
-      date: "2023-08-15",
-      summary:
-        "This paper explores the applications of artificial intelligence in enhancing learning experiences and personalized education.",
-    },
-    {
-      id: 2,
-      title: "Advances in Online Learning Platforms",
-      authors: "Alice Johnson, Bob Lee",
-      date: "2023-06-30",
-      summary:
-        "The study discusses the latest technologies improving online learning platforms and their impact on student engagement.",
-    },
-  ];
+  useEffect(() => {
+    const email = localStorage.getItem("userEmail");
+    if (email) setUserEmail(email);
+
+    // fetch publications
+    const fetchData = async () => {
+      try {
+        const res = await fetch("/api/publication");
+        const data = await res.json();
+        setPublications(data);
+      } catch (err) {
+        console.error("Error fetching publications", err);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   return (
     <Box display="flex" minHeight="100vh" bgcolor="#dce6f7">
@@ -53,14 +56,28 @@ export default function HomePage() {
           <Link href="#" underline="hover" color="primary.dark" fontSize={14}>
             User Manual
           </Link>
-          <Button
-            variant="contained"
-            sx={{ bgcolor: "#7b9de0", textTransform: "none" }}
-            component={Link}
-            href="/login"
-          >
-            Log in
-          </Button>
+
+          {userEmail ? (
+            <Box display="flex" alignItems="center" gap={2}>
+              <Typography variant="body1" color="primary.dark">
+                {userEmail}
+              </Typography>
+              <IconButton href="/profile">
+                <Avatar sx={{ bgcolor: "#7b9de0" }}>
+                  {userEmail[0].toUpperCase()}
+                </Avatar>
+              </IconButton>
+            </Box>
+          ) : (
+            <Button
+              variant="contained"
+              sx={{ bgcolor: "#7b9de0", textTransform: "none" }}
+              component={Link}
+              href="/login"
+            >
+              Log in
+            </Button>
+          )}
         </Box>
 
         {/* Search Section */}
@@ -92,21 +109,17 @@ export default function HomePage() {
             </Typography>
           </Box>
         </Box>
+
         {/* Publication List */}
         <Box mt={6} ml={5} display="flex" flexDirection="column" gap={3}>
           {publications.map((pub) => (
-            <Box
-              key={pub.id}
-              sx={{
-                p: 2,
-              }}
-            >
+            <Box key={pub.id} sx={{ p: 2 }}>
               <Typography
                 component={Link}
                 variant="h6"
                 fontWeight="bold"
                 color="primary.dark"
-                href="/pub_details?id='#'"
+                href={`/pub_details?id=${pub.id}`}
                 underline="always"
               >
                 {pub.title}
@@ -118,7 +131,7 @@ export default function HomePage() {
                 Summary: {pub.summary}
               </Typography>
               <Typography variant="subtitle2" color="#A5A6A7" mt={1}>
-                Publication Date: {pub.date}
+                Publication Year: {pub.date}
               </Typography>
             </Box>
           ))}

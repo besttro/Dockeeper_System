@@ -33,7 +33,9 @@ export default function LoginForm() {
       const data = await res.json();
 
       if (data.success) {
-        router.push("/index"); // navigate to home page
+        // Save email for later use
+        localStorage.setItem("userEmail", email);
+        router.push("/"); // go to home
       } else {
         setError("Email หรือ Password ไม่ถูกต้อง");
       }
