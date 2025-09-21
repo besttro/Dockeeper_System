@@ -79,8 +79,8 @@ export default function Navbar() {
 
       {/* กลาง: เมนู */}
       <Box display="flex" alignItems="center" gap={4}>
-        <Link href="#" underline="hover" color="primary.dark" fontSize={14}>My Publications</Link>
-        <Link href="#" underline="hover" color="primary.dark" fontSize={14}>Add Publication</Link>
+        <Link href="my_publication" underline="hover" color="primary.dark" fontSize={14}>My Publications</Link>
+        <Link href="add_publication" underline="hover" color="primary.dark" fontSize={14}>Add Publication</Link>
         <Link href="#" underline="hover" color="primary.dark" fontSize={14}>Review Publication</Link>
         <Link href="#" underline="hover" color="primary.dark" fontSize={14}>Confirm Publication</Link>
         <Link href="#" underline="hover" color="primary.dark" fontSize={14}>User Management</Link>
@@ -149,4 +149,3 @@ export default function Navbar() {
     </Box>
   );
 }
-
