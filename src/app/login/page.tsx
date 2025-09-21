@@ -4,34 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Box, Typography, TextField, Button } from "@mui/material";
 import Image from "next/image";
+import LoginForm from "@/components/Forms/LoginForm";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    try {
-      const res = await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        router.push("/"); // navigate to home page
-      } else {
-        setError("Email หรือ Password ไม่ถูกต้อง");
-      }
-    } catch (err) {
-      setError("เกิดข้อผิดพลาด");
-    }
-  };
 
   return (
     <Box sx={{ display: "flex", minHeight: "100vh", backgroundColor: "white" }}>
@@ -45,34 +21,7 @@ export default function LoginPage() {
           alignItems: "center",
         }}
       >
-        <Box
-          component="form"
-          onSubmit={handleLogin}
-          sx={{ width: "300px", display: "flex", flexDirection: "column", gap: 2 }}
-        >
-          <TextField
-            label="Email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <TextField
-            label="Password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          <Button type="submit" variant="contained" color="primary">
-            Login
-          </Button>
-          {error && (
-            <Typography color="error" variant="body2">
-              {error}
-            </Typography>
-          )}
-        </Box>
+        <LoginForm />
       </Box>
 
       {/* Right side: branding */}

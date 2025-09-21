@@ -11,15 +11,37 @@ import {
   Paper,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { useRouter } from "next/navigation";
 
 export default function LoginForm() {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const router = useRouter();
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Email:", email, "Password:", password);
+
+    try {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        // Save email for later use
+        localStorage.setItem("userEmail", email);
+        router.push("/"); // go to home
+      } else {
+        setError("Email หรือ Password ไม่ถูกต้อง");
+      }
+    } catch (err) {
+      setError("เกิดข้อผิดพลาด");
+    }
   };
 
   return (
@@ -40,7 +62,7 @@ export default function LoginForm() {
         Login
       </Typography>
 
-      <Box component="form" onSubmit={handleSubmit}>
+      <Box component="form" onSubmit={handleLogin}>
         {/* Email */}
         <TextField
           label="Email"
