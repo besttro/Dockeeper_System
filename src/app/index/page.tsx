@@ -11,7 +11,7 @@ import {
   Avatar,
 } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
-import Slidebar from "@/components/Slidebar";
+import Slidebar from "@/components/Navigator/Slidebar";
 
 type Publication = {
   id: number;
