@@ -96,6 +96,7 @@ export default function MyPublicationTable() {
                     variant="contained"
                     sx={{ bgcolor: "#f6ad55", mr: 1 }}
                     endIcon={<EditIcon />}
+                    href="/update_publication"
                   >
                     Update
                   </Button>
