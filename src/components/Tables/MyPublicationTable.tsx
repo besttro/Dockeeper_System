@@ -36,7 +36,7 @@ const getStatusColor = (status: Publication["status"]) => {
     case "Pending":
       return { bgcolor: "#e2e8f0", color: "#4a5568" };
     case "Waiting for Edit":
-      return { bgcolor: "#fed7d7", color: "#c53030" }; // สีแดง
+      return { bgcolor: "#fed7d7", color: "#c53030" };
     default:
       return { bgcolor: "#e2e8f0", color: "#4a5568" };
   }
