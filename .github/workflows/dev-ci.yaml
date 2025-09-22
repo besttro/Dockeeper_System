@@ -7,8 +7,43 @@ on:
     branches: [ "development" ]
 
 jobs:
-  lint-migrate-build:
+  # Job 1: Lint
+  lint:
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install all dependencies (include dev)
+        run: npm ci
+
+      - name: Check ESLint version
+        run: npx eslint --version
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Check for invalid <Html> usage
+        run: |
+            if grep -r --exclude-dir={node_modules,.next,build,.vs,.github} \
+                --include=*.{js,ts,tsx} \
+                "import.*Html.*from 'next/document'" src/; then
+                echo "❌ Found invalid import of Html from next/document"
+                exit 1
+            else
+                echo "✅ No invalid Html import found"
+            fi
+
+  # Job 2: Build (if lint pass)
+  build:
+    runs-on: ubuntu-latest
+    needs: lint
     services:
       postgres:
         image: postgres
@@ -17,30 +52,30 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: testDB
-        options: > 
-          --health-cmd="pg_isready -U postgres" 
-          --health-interval=10s 
-          --health-timeout=5s 
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
           --health-retries=5
+
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testDB
-      NODE_ENV: development
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
-          
-      - name: Install dependencies
-        run: npm ci
 
-      - name: Lint code
-        run: npm run lint
+      - name: Clean project
+        run: rm -rf .next node_modules
+
+      - name: Install production dependencies only
+        run: npm ci --omit=dev
 
       - name: Generate Prisma client
         run: npx prisma generate
@@ -48,5 +83,10 @@ jobs:
       - name: Run migrations
         run: npx prisma migrate deploy
 
+      - name: Check DB migrations status
+        run: npx prisma migrate status
+
       - name: Build Project
         run: npm run build
+        env:
+          NODE_ENV: production
