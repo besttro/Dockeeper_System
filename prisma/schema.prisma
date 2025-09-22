@@ -25,6 +25,7 @@ model Publication {
   pub_title  String
   pub_year   Int
   pub_status Int
+  pub_type   Int   
 
   // Relations
   participations Participation[]
@@ -33,15 +34,21 @@ model Publication {
 }
 
 model Participation {
-  part_id     Int @id @default(autoincrement())
+  part_id     Int   @id @default(autoincrement())
   pub_id      Int
-  user_id     Int
-  part_status Int  
+  user_id     Int?        // nullable FK
+  co_name     String?     // nullable text
+  part_status Int
 
   // Relations
   publication Publication @relation(fields: [pub_id], references: [pub_id])
-  user        User        @relation(fields: [user_id], references: [user_id])
+  user        User?       @relation(fields: [user_id], references: [user_id], onDelete: SetNull)
+  //         ^^^^^ make relation optional as well (and optional: set null on delete)
+  
+  @@index([user_id])
+  @@index([pub_id])
 }
+
 
 model Member {
   mem_id    Int    @id @default(autoincrement())
@@ -65,16 +72,36 @@ model Manage {
   publication Publication @relation(fields: [pub_id], references: [pub_id])
 }
 
+// If you want to be explicit about type:
+enum FileKind {
+  PDF
+  OTHER
+}
+
 model File {
-  file_id    Int    @id @default(autoincrement())
-  file_name  String
-  file_attach String
-  user_id    Int
-  pub_id     Int
+  file_id      Int       @id @default(autoincrement())
+  file_name    String                // original name shown in your UI
+  file_url     String                // where the file actually lives (S3/Supabase/etc.)
+  file_mime    String   @default("application/pdf")
+  file_ext     String   @default("pdf")
+  file_size    Int                  // bytes
+  checksum     String?  @unique     // sha256 (optional, helps dedupe/integrity)
+  kind         FileKind @default(PDF)
+  uploaded_at  DateTime @default(now())
+
+  user_id      Int
+  pub_id       Int
 
   // Relations
-  user        User        @relation(fields: [user_id], references: [user_id])
-  publication Publication @relation(fields: [pub_id], references: [pub_id])
+  user         User        @relation(fields: [user_id], references: [user_id])
+  publication  Publication @relation(fields: [pub_id], references: [pub_id])
+
+  // Helpful indexes for listing
+  @@index([pub_id, uploaded_at])
+  @@index([user_id, uploaded_at])
+
+  // Optional: prevent same name twice in a publication
+  // @@unique([pub_id, file_name])
 }
 
 model Record {

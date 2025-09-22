@@ -1,12 +1,10 @@
+// app/(app)/add/page.tsx
 "use client";
-
-import { useState } from "react";
-import { Box, Button, Typography, Divider, Link } from "@mui/material";
+import { Box } from "@mui/material";
 import Navbar from "../../components/Navigator/Navbar";
 import AddPublicationForm from "@/components/Forms/AddPublicationForm";
 
 export default function AddPublicationPage() {
-  
   return (
     <Box>
       <Navbar />
@@ -16,3 +14,5 @@ export default function AddPublicationPage() {
     </Box>
   );
 }
+
+
