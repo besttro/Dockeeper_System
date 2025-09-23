@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 import { Box, Typography, Paper, Link } from "@mui/material";
+import Image from "next/image";
 
 export default function Slidebar() {
   return (
@@ -14,7 +15,7 @@ export default function Slidebar() {
     >
       {/* Logo + Title */}
       <Box display="flex" flexDirection="row" alignItems="center">
-        <img src="/psu_logo.png" alt="Logo" width={60} height={60} />
+        <Image src="/psu_logo.png" alt="Logo" width={60} height={60} />
         <Box display="flex" flexDirection="column" ml={1} lineHeight={1}>
           <Typography
             variant="h5"

@@ -6,7 +6,6 @@ import {
 } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import Slidebar from "@/components/Navigator/Slidebar";
-import { useRouter } from "next/navigation";
 
 type Publication = {
   id: number;
@@ -16,8 +15,7 @@ type Publication = {
   summary: string;
 };
 
-export default function HomePage() {
-  const router = useRouter();
+export default function Home() {
   const [search, setSearch] = useState("");
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [publications, setPublications] = useState<Publication[]>([]);

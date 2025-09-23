@@ -19,10 +19,10 @@ import FileUploadIcon from "@mui/icons-material/FileUpload";
 export default function UpdatePublicationForm() {
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
-  const [coAuthor, setCoAuthor] = useState("");
+  // const [coAuthor, setCoAuthor] = useState("");
   const [date, setDate] = useState("");
   const [description, setDescription] = useState("");
-  const [type, setType] = useState("");
+  // const [type, setType] = useState(""); 
   const [file, setFile] = useState<File | null>(null);
   const [coAuthors, setCoAuthors] = useState<string[]>([""]);
   const options = ["Option 1", "Option 2", "Option 3", "Option 4"];
@@ -59,10 +59,10 @@ export default function UpdatePublicationForm() {
     console.log({
       title,
       author,
-      coAuthor,
+      coAuthors,
       date,
       description,
-      type,
+      selectedOptions,
       file,
     });
   };

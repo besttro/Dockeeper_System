@@ -7,11 +7,11 @@ import {
   Paper,
   TextField,
   Typography,
-  Divider,
   IconButton,
   Link,
 } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
+import Image from "next/image";
 
 export default function HomePage() {
   const [search, setSearch] = useState("");
@@ -30,7 +30,7 @@ export default function HomePage() {
       >
         {/* Logo + Title */}
         <Box display="flex" flexDirection="row" alignItems="center">
-          <img src="/psulogo.png" alt="Logo" width={60} height={60} />
+          <Image src="/psulogo.png" alt="Logo" width={60} height={60} />
           <Box display="flex" flexDirection="column">
             <Typography variant="h6" fontWeight="bold" color="primary.dark">
               DOC
