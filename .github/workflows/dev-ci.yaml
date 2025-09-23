@@ -2,9 +2,9 @@ name: Development CI
 
 on:
   push:
-    branches: [ "bugfix/AuthVersion-build-error" ]
+    branches: [ "development" ]
   pull_request:
-    branches: [ "bugfix/AuthVersion-build-error" ]
+    branches: [ "development" ]
 
 jobs:
   # Job 1: Lint
