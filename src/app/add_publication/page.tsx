@@ -1,15 +1,18 @@
+// app/(app)/add/page.tsx
+"use client";
 import { Box } from "@mui/material";
 import Navbar from "../../components/Navigator/Navbar";
-import ProfileForm from "@/components/Forms/ProfileForm";
+import AddPublicationForm from "@/components/Forms/AddPublicationForm";
 
-export default function ProfilePage() {
-
+export default function AddPublicationPage() {
   return (
     <Box>
       <Navbar />
       <Box bgcolor="#dce6f7" minHeight="100vh" py={4}>
-        <ProfileForm />
+        <AddPublicationForm />
       </Box>
     </Box>
   );
 }
+
+

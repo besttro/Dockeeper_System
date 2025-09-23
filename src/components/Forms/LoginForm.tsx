@@ -2,47 +2,55 @@
 
 import { useState } from "react";
 import {
-  Box,
-  Button,
-  TextField,
-  Typography,
-  IconButton,
-  InputAdornment,
-  Paper,
+  Box, Button, TextField, Typography, IconButton,
+  InputAdornment, Paper, Alert
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 
 export default function LoginForm() {
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [showPassword, setShowPassword] = useState<boolean>(false);
   const router = useRouter();
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
+    setError(null);
 
+    if (!email.trim() || !password) {
+      setError("Please enter email and password.");
+      return;
+    }
+
+    setLoading(true);
     try {
-      const res = await fetch("/api/login", {
+      const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include", // make sure the Set-Cookie is accepted
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await res.json();
-
-      if (data.success) {
-        // Save email for later use
-        localStorage.setItem("userEmail", email);
-        router.push("/"); // go to home
-      } else {
-        setError("Email หรือ Password ไม่ถูกต้อง");
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j?.error ?? "Invalid credentials");
       }
-    } catch (err) {
-      setError("เกิดข้อผิดพลาด");
+
+      // Optional: keep email locally for your UI, but not required for auth
+      // localStorage.setItem("userEmail", email);
+
+      // Navigate after cookie is set
+      router.replace("/");
+      router.refresh();
+    } catch (err: any) {
+      setError(err?.message || "Login failed");
+    } finally {
+      setLoading(false);
     }
-  };
+  }
 
   return (
     <Paper
@@ -52,21 +60,26 @@ export default function LoginForm() {
         p: 4,
         borderRadius: 2,
         bgcolor: "background.paper",
-        justifyContent: "center",
-        alignItems: "center",
         display: "flex",
         flexDirection: "column",
+        alignItems: "center",
       }}
     >
       <Typography variant="h5" fontWeight="bold" color="primary" mb={3}>
         Login
       </Typography>
 
-      <Box component="form" onSubmit={handleLogin}>
-        {/* Email */}
+      <Box component="form" onSubmit={handleLogin} sx={{ width: "100%" }}>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
         <TextField
           label="Email"
           type="email"
+          autoComplete="email"
           variant="outlined"
           fullWidth
           margin="normal"
@@ -74,10 +87,10 @@ export default function LoginForm() {
           onChange={(e) => setEmail(e.target.value)}
         />
 
-        {/* Password */}
         <TextField
           label="Password"
           type={showPassword ? "text" : "password"}
+          autoComplete="current-password"
           variant="outlined"
           fullWidth
           margin="normal"
@@ -87,10 +100,11 @@ export default function LoginForm() {
             endAdornment: (
               <InputAdornment position="end">
                 <IconButton
-                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  onClick={() => setShowPassword((s) => !s)}
                   edge="end"
                 >
-                  {showPassword ? <Visibility /> : <VisibilityOff />}
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
                 </IconButton>
               </InputAdornment>
             ),
@@ -103,10 +117,12 @@ export default function LoginForm() {
           color="primary"
           fullWidth
           sx={{ mt: 3 }}
+          disabled={loading}
         >
-          Log in
+          {loading ? "Signing in…" : "Log in"}
         </Button>
       </Box>
     </Paper>
   );
 }
+

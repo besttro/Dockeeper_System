@@ -2,16 +2,10 @@
 
 import { useState, useEffect } from "react";
 import {
-  Box,
-  Button,
-  TextField,
-  Typography,
-  IconButton,
-  Link,
-  Avatar,
+  Box, Button, TextField, Typography, IconButton, Link, Avatar,
 } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
-import Slidebar from "@/components/Slidebar";
+import Slidebar from "@/components/Navigator/Slidebar";
 
 type Publication = {
   id: number;
@@ -21,37 +15,50 @@ type Publication = {
   summary: string;
 };
 
-export default function HomePage() {
+export default function Home() {
   const [search, setSearch] = useState("");
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [publications, setPublications] = useState<Publication[]>([]);
+  const [loadingUser, setLoadingUser] = useState(true);
+
+  // fetch session user
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/me", { credentials: "include" });
+        const j = await res.json().catch(() => ({}));
+        if (j?.loggedIn) setUserEmail(j.email ?? null);
+        else setUserEmail(null);
+      } catch {
+        setUserEmail(null);
+      } finally {
+        setLoadingUser(false);
+      }
+    })();
+  }, []);
 
   useEffect(() => {
-    const email = localStorage.getItem("userEmail");
-    if (email) setUserEmail(email);
-
-    // fetch publications
-    const fetchData = async () => {
+    (async () => {
       try {
-        const res = await fetch("/api/publication");
-        const data = await res.json();
-        console.log("data from API:", data);
-
-        // ปรับตรงนี้
-        if (Array.isArray(data)) {
-          setPublications(data);
-        } else if (Array.isArray(data.publications)) {
-          setPublications(data.publications);
-        } else {
-          setPublications([]); // fallback กันพัง
+        const res = await fetch("/api/publication", {
+          credentials: "include",
+          cache: "no-store",
+        });
+        if (!res.ok) {
+          console.warn("Failed /api/publication", res.status);
+          setPublications([]);
+          return;
         }
+        const data = await res.json();
+        if (Array.isArray(data)) setPublications(data);
+        else setPublications([]);
       } catch (err) {
         console.error("Error fetching publications", err);
+        setPublications([]);
       }
-    };
-
-    fetchData();
+    })();
   }, []);
+
 
   return (
     <Box display="flex" minHeight="100vh" bgcolor="#dce6f7">
@@ -66,14 +73,14 @@ export default function HomePage() {
             User Manual
           </Link>
 
-          {userEmail ? (
+          {loadingUser ? null : userEmail ? (
             <Box display="flex" alignItems="center" gap={2}>
               <Typography variant="body1" color="primary.dark">
                 {userEmail}
               </Typography>
               <IconButton href="/profile">
                 <Avatar sx={{ bgcolor: "#7b9de0" }}>
-                  {userEmail[0].toUpperCase()}
+                  {userEmail[0]?.toUpperCase() ?? "U"}
                 </Avatar>
               </IconButton>
             </Box>
@@ -81,7 +88,7 @@ export default function HomePage() {
             <Button
               variant="contained"
               sx={{ bgcolor: "#7b9de0", textTransform: "none" }}
-              component={Link}
+              component={Link as any}
               href="/login"
             >
               Log in
@@ -104,18 +111,11 @@ export default function HomePage() {
           >
             Search
           </Button>
-          <Box
-            display="flex"
-            alignItems="center"
-            gap={0.5}
-            sx={{ cursor: "pointer" }}
-          >
+          <Box display="flex" alignItems="center" gap={0.5} sx={{ cursor: "pointer" }}>
             <IconButton size="small">
               <FilterListIcon fontSize="small" />
             </IconButton>
-            <Typography variant="body2" color="primary.dark">
-              Filter Option
-            </Typography>
+            <Typography variant="body2" color="primary.dark">Filter Option</Typography>
           </Box>
         </Box>
 
