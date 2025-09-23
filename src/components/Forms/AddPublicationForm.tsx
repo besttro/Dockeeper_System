@@ -87,8 +87,8 @@ export default function AddPublicationForm() {
         }}
       >
         <Typography
-          variant="subtitle1"
-          fontWeight={500}
+          variant="h6"
+          fontWeight="bold"
           color="text.primary"
           ml={2}
         >

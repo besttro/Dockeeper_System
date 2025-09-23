@@ -48,7 +48,7 @@ const getStatusColor = (status: Publication["status"]) => {
   }
 };
 
-export default function MyPublicationTable() {
+export default function ManagePublicationTable() {
   const [filter, setFilter] = useState<"All" | Publication["status"]>("All");
 
   const filteredPublications =
@@ -178,18 +178,11 @@ export default function MyPublicationTable() {
                 <TableCell align="center">
                   <Button
                     variant="contained"
-                    sx={{ bgcolor: "#f6ad55", mr: 1 }}
-                    endIcon={<EditIcon />}
-                    href="/update_publication"
+                    sx={{ bgcolor: "#556bf6ff", mr: 1 }}
+                    endIcon={<VisibilityIcon />}
+                    href="/review_publication"
                   >
-                    Update
-                  </Button>
-                  <Button
-                    variant="contained"
-                    sx={{ bgcolor: "#f56565" }}
-                    endIcon={<DeleteIcon />}
-                  >
-                    Delete
+                    review
                   </Button>
                 </TableCell>
               </TableRow>

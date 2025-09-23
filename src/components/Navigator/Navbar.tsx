@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ListItemIcon } from "@mui/material";
 import { Person, Logout } from "@mui/icons-material";
+import NextLink from "next/link";
+import { Link as MuiLink } from "@mui/material";
 
 export default function Navbar() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -41,54 +43,95 @@ export default function Navbar() {
       bgcolor="#b9c9f2"
     >
       {/* ซ้าย: Logo */}
-      <Box display="flex" flexDirection="row" alignItems="center">
-        <img src="/psu_logo.png" alt="Logo" width={48} height={80} />
-        <Box display="flex" flexDirection="column" ml={2} lineHeight={1}>
-          <Typography
-            variant="h5"
-            fontWeight="bold"
-            color="primary.dark"
-            sx={{ lineHeight: 1 }}
-          >
-            DOC
-          </Typography>
-          <Typography
-            variant="h5"
-            fontWeight="bold"
-            color="primary.dark"
-            sx={{ lineHeight: 1, mt: -0.5 }}
-          >
-            KEEPER
-          </Typography>
+      <NextLink href={"/index"}>
+        <Box display="flex" flexDirection="row" alignItems="center">
+          <img src="/psu_logo.png" alt="Logo" width={48} height={80} />
+          <Box display="flex" flexDirection="column" ml={2} lineHeight={1}>
+            <Typography
+              variant="h5"
+              fontWeight="bold"
+              color="primary.dark"
+              sx={{ lineHeight: 1 }}
+            >
+              DOC
+            </Typography>
+            <Typography
+              variant="h5"
+              fontWeight="bold"
+              color="primary.dark"
+              sx={{ lineHeight: 1, mt: -0.5 }}
+            >
+              KEEPER
+            </Typography>
+          </Box>
         </Box>
-      </Box>
+      </NextLink>
 
       {/* กลาง: เมนู */}
       <Box display="flex" alignItems="center" gap={4}>
-        <Link href="#" underline="hover" color="primary.dark" fontSize={14}>
+        <MuiLink
+          component={NextLink}
+          href="/my_publication"
+          underline="hover"
+          color="primary.dark"
+          fontSize={14}
+        >
           My Publications
-        </Link>
-        <Link href="#" underline="hover" color="primary.dark" fontSize={14}>
+        </MuiLink>
+        <MuiLink
+          component={NextLink}
+          href="/add_publication"
+          underline="hover"
+          color="primary.dark"
+          fontSize={14}
+        >
           Add Publication
-        </Link>
-        <Link href="#" underline="hover" color="primary.dark" fontSize={14}>
-          Review Pubication
-        </Link>
-        <Link href="#" underline="hover" color="primary.dark" fontSize={14}>
+        </MuiLink>
+        <MuiLink
+          component={NextLink}
+          href="/manage_publication"
+          underline="hover"
+          color="primary.dark"
+          fontSize={14}
+        >
           Confirm Publication
-        </Link>
-        <Link href="#" underline="hover" color="primary.dark" fontSize={14}>
+        </MuiLink>
+        <MuiLink
+          component={NextLink}
+          href="/manage/manage_user"
+          underline="hover"
+          color="primary.dark"
+          fontSize={14}
+        >
           User Management
-        </Link>
-        <Link href="#" underline="hover" color="primary.dark" fontSize={14}>
+        </MuiLink>
+        <MuiLink
+          component={NextLink}
+          href="/add_user"
+          underline="hover"
+          color="primary.dark"
+          fontSize={14}
+        >
           Add User
-        </Link>
-        <Link href="#" underline="hover" color="primary.dark" fontSize={14}>
+        </MuiLink>
+        <MuiLink
+          component={NextLink}
+          href="#"
+          underline="hover"
+          color="primary.dark"
+          fontSize={14}
+        >
           Audit Log
-        </Link>
-        <Link href="#" underline="hover" color="primary.dark" fontSize={14}>
+        </MuiLink>
+        <MuiLink
+          component={NextLink}
+          href="#"
+          underline="hover"
+          color="primary.dark"
+          fontSize={14}
+        >
           User Manual
-        </Link>
+        </MuiLink>
       </Box>
 
       {/* ขวา: User Manual + Login */}
@@ -128,27 +171,42 @@ export default function Navbar() {
               },
             }}
           >
-            <MenuItem
-              onClick={handleProfile}
-              sx={{ py: 1.5, px: 2, "&:hover": { bgcolor: "#f0f4ff" } }}
+            <MuiLink
+              component={NextLink}
+              href="/edit_profile"
+              underline="none"
+              color="primary.dark"
+              fontSize={14}
             >
-              <ListItemIcon>
-                <Person fontSize="small" />
-              </ListItemIcon>
-              <Typography variant="body2">Profile</Typography>
-            </MenuItem>
-
-            <MenuItem
-              onClick={handleLogout}
-              sx={{ py: 1.5, px: 2, "&:hover": { bgcolor: "#ffe6e6" } }}
+              <MenuItem
+                onClick={handleProfile}
+                sx={{ py: 1.5, px: 2, "&:hover": { bgcolor: "#f0f4ff" } }}
+              >
+                <ListItemIcon>
+                  <Person fontSize="small" />
+                </ListItemIcon>
+                <Typography variant="body2">Profile</Typography>
+              </MenuItem>
+            </MuiLink>
+            <MuiLink
+              component={NextLink}
+              href="#"
+              underline="none"
+              color="primary.dark"
+              fontSize={14}
             >
-              <ListItemIcon>
-                <Logout fontSize="small" color="error" />
-              </ListItemIcon>
-              <Typography variant="body2" color="error">
-                Logout
-              </Typography>
-            </MenuItem>
+              <MenuItem
+                onClick={handleLogout}
+                sx={{ py: 1.5, px: 2, "&:hover": { bgcolor: "#ffe6e6" } }}
+              >
+                <ListItemIcon>
+                  <Logout fontSize="small" color="error" />
+                </ListItemIcon>
+                <Typography variant="body2" color="error">
+                  Logout
+                </Typography>
+              </MenuItem>
+            </MuiLink>
           </Menu>
           {/* ตัวอย่างชื่อผู้ใช้ เช็ค session */}
           <Box display="flex" flexDirection="column" lineHeight={1}>

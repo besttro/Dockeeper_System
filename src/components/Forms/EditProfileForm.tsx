@@ -15,7 +15,7 @@ import {
 import EmailIcon from "@mui/icons-material/Email";
 import { Visibility, VisibilityOff, Edit } from "@mui/icons-material";
 
-export default function ProfileForm() {
+export default function EditProfileForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -32,19 +32,11 @@ export default function ProfileForm() {
       {/* ส่วน Avatar และ Email */}
       <Box display="flex" alignItems="center" gap={2} mb={3}>
         <Box position="relative">
-          <Avatar sx={{ width: 80, height: 80 }} />
-          <IconButton
-            size="small"
-            sx={{
-              position: "absolute",
-              bottom: 0,
-              right: 0,
-              bgcolor: "white",
-              border: "1px solid #ddd",
-            }}
+          <Avatar
+            sx={{ width: 80, height: 80, bgcolor: "#20329cff", fontSize: 32 }}
           >
-            <Edit fontSize="small" />
-          </IconButton>
+            T
+          </Avatar>
         </Box>
         <Box>
           <Typography fontWeight="bold">Teerasak shadowmaster</Typography>
@@ -127,37 +119,38 @@ export default function ProfileForm() {
         <Typography fontWeight="bold" mb={1}>
           My Email Address
         </Typography>
-        <Box display="flex" alignItems="center" gap={2}>
-          <Box
-            height={40}
-            width={40}
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            bgcolor="#d1e3feff"
-            borderRadius={100}
-          >
-            <EmailIcon color="primary" />
-          </Box>
+        <Box display="flex" justifyContent="space-between">
+          <Box display="flex" alignItems="center" gap={2}>
+            <Box
+              height={40}
+              width={40}
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              bgcolor="#d1e3feff"
+              borderRadius={100}
+            >
+              <EmailIcon color="primary" />
+            </Box>
 
-          <Box>
-            <Typography>teerasak.shadowmaster@gmail.com</Typography>
-            <Typography variant="body2" color="text.secondary">
-              1 month ago
-            </Typography>
+            <Box>
+              <Typography>teerasak.shadowmaster@gmail.com</Typography>
+              <Typography variant="body2" color="text.secondary">
+                click for email
+              </Typography>
+            </Box>
           </Box>
+          <Button
+            variant="contained"
+            sx={{ bgcolor: "#0d2c6c", borderRadius: 2, px: 4 }}
+          >
+            Confirm
+          </Button>
         </Box>
       </Box>
 
       {/* ปุ่มยืนยัน */}
-      <Box textAlign="right" mt={4}>
-        <Button
-          variant="contained"
-          sx={{ bgcolor: "#0d2c6c", borderRadius: 2, px: 4 }}
-        >
-          Confirm
-        </Button>
-      </Box>
+      <Box textAlign="right" mt={4}></Box>
     </Paper>
   );
 }
