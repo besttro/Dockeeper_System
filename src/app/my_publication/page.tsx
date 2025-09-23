@@ -1,5 +1,3 @@
-// wherever your table page is
-"use client";
 import { Box } from "@mui/material";
 import Navbar from "../../components/Navigator/Navbar";
 import MyPublicationTable from "@/components/Tables/MyPublicationTable";

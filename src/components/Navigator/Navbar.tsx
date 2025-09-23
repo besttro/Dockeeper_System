@@ -5,6 +5,7 @@ import {
   Box, Typography, Button, Link as MUILink, Avatar,
   Menu, MenuItem, ListItemIcon
 } from "@mui/material";
+import Image from "next/image";
 import { Person, Logout } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 // If you want client-side navigation with <Link>, you can:
@@ -37,6 +38,7 @@ export default function Navbar() {
         setFname("");
         setLname("");
         setEmail("");
+        console.log('Fetch Data Error: ', e)
       } finally {
         setLoadingUser(false);
       }
@@ -95,7 +97,7 @@ export default function Navbar() {
       {/* If you want Next.js Link: replace MUILink with <NextLink href="/" passHref> */}
       <MUILink href="/" style={{ textDecoration: "none", color: "inherit" }}>
         <Box display="flex" flexDirection="row" alignItems="center" sx={{ cursor: "pointer" }}>
-          <img src="/psu_logo.png" alt="Logo" width={48} height={80} />
+          <Image src="/psu_logo.png" alt="Logo" width={48} height={80} />
           <Box display="flex" flexDirection="column" ml={2} lineHeight={1}>
             <Typography variant="h5" fontWeight="bold" color="primary.dark" sx={{ lineHeight: 1 }}>
               DOC
