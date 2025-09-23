@@ -214,6 +214,7 @@ export default function UpdatePublicationForm() {
             onChange={(event, newValue) => setSelectedOptions(newValue)}
             renderTags={(value: string[], getTagProps) =>
               value.map((option, index) => (
+                // eslint-disable-next-line react/jsx-key
                 <Chip
                   label={option}
                   {...getTagProps({ index })}
