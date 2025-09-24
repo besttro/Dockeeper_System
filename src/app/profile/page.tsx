@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Box, Button, Typography, Divider, Link } from "@mui/material";
 import Navbar from "../../components/Navigator/Navbar";
-import ProfileForm from "@/components/Forms/ProfileForm";
+import ProfileDashboard from "../../components/Forms/Profile"
 
 export default function ProfilePage() {
 
@@ -11,7 +11,7 @@ export default function ProfilePage() {
     <Box>
       <Navbar />
       <Box bgcolor="#dce6f7" minHeight="100vh" py={4}>
-        <ProfileForm />
+        <ProfileDashboard/>
       </Box>
     </Box>
   );

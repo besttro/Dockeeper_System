@@ -1,6 +1,7 @@
+// app/profile/page.tsx (or wherever you render this dashboard)
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Box,
   Typography,
@@ -11,184 +12,275 @@ import {
   Button,
   Avatar,
   Stack,
+  Paper,
+  Alert,
 } from "@mui/material";
 import { deepPurple } from "@mui/material/colors";
+import NextLink from "next/link";
+import { Link as MuiLink } from "@mui/material";
 
-// --- Sample Data ---
-const userData = {
-  name: "Teerasak shadowmaster",
-  email: "teerasak.shadowmaster@gmail.com",
-  role: "Professer",
-  tel: "+66 88 666 6666",
+
+type PubRow = {
+  id: number;
+  title: string;
+  year: number;
+  link?: string;
 };
 
-const publicationData = [
-  { title: "Example Education Resource01", year: 2024, link: "#" },
-  { title: "Example Education Resource02", year: 2023, link: "#" },
-  { title: "Example Education Resource03", year: 2023, link: "#" },
-  { title: "Example Education Resource04", year: 2022, link: "#" },
-  { title: "Example Education Resource05", year: 2022, link: "#" },
-  { title: "Example Education Resource06", year: 2021, link: "#" },
-  { title: "Example Education Resource07", year: 2020, link: "#" },
-];
+export default function ProfileDashboard() {
+  // profile state
+  const [fname, setFname] = useState("");
+  const [lname, setLname] = useState("");
+  const [email, setEmail] = useState("");
+  const [tel, setTel] = useState(""); // mem_phone
+  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [profileError, setProfileError] = useState<string | null>(null);
 
-const sortedPublications = [...publicationData].sort((a, b) => b.year - a.year);
+  // publications state
+  const [publications, setPublications] = useState<PubRow[]>([]);
+  const [loadingPubs, setLoadingPubs] = useState(true);
+  const [pubsError, setPubsError] = useState<string | null>(null);
 
-const ProfileDashboard = () => {
-  const [startYear, setStartYear] = useState("");
-  const [endYear, setEndYear] = useState("");
-  const [filteredPublications, setFilteredPublications] = useState<
-    typeof publicationData
-  >([]);
+  // filters
+  const [startYear, setStartYear] = useState<string>("");
+  const [endYear, setEndYear] = useState<string>("");
 
-  const allYears = [...new Set(publicationData.map((p) => p.year))].sort(
-    (a, b) => b - a
-  );
-
+  // 1) Load profile (from session)
   useEffect(() => {
-    let result = sortedPublications;
-    const startNum = parseInt(startYear);
-    const endNum = parseInt(endYear);
-
-    if (startYear && endYear) {
-      result = result.filter((p) => p.year >= startNum && p.year <= endNum);
-    } else if (startYear) {
-      result = result.filter((p) => p.year >= startNum);
-    } else if (endYear) {
-      result = result.filter((p) => p.year <= endNum);
-    }
-
-    setFilteredPublications(result);
-  }, [startYear, endYear]);
-
-  useEffect(() => {
-    setFilteredPublications(sortedPublications.slice(0, 5));
+    (async () => {
+      setLoadingProfile(true);
+      setProfileError(null);
+      try {
+        const res = await fetch("/api/profile", { credentials: "include" });
+        if (res.status === 401) {
+          setProfileError("Please log in to view your profile.");
+          return;
+        }
+        const data = await res.json();
+        setEmail(data?.email ?? "");
+        setFname(data?.fname ?? "");
+        setLname(data?.lname ?? "");
+        setTel(data?.phone ?? "");
+      } catch {
+        setProfileError("Failed to load profile.");
+      } finally {
+        setLoadingProfile(false);
+      }
+    })();
   }, []);
 
+  // 2) Load authored + public publications
+  useEffect(() => {
+    (async () => {
+      setLoadingPubs(true);
+      setPubsError(null);
+      try {
+        // Endpoint created earlier:
+        // app/api/profile/publications/route.ts
+        const res = await fetch("/api/profile/publications", {
+          credentials: "include",
+          cache: "no-store",
+        });
+        if (!res.ok) {
+          const j = await res.json().catch(() => ({}));
+          throw new Error(j?.error ?? `Failed: ${res.status}`);
+        }
+        const data = (await res.json()) as Array<{
+          id: number;
+          title: string;
+          year: number;
+        }>;
+        // Sort newest first
+        const sorted = [...data].sort((a, b) => b.year - a.year);
+        setPublications(sorted);
+      } catch (e: any) {
+        setPubsError(e?.message ?? "Failed to load publications.");
+        setPublications([]);
+      } finally {
+        setLoadingPubs(false);
+      }
+    })();
+  }, []);
+
+  // unique years for dropdown
+  const allYears = useMemo(() => {
+    const s = new Set<number>();
+    publications.forEach((p) => s.add(p.year));
+    return Array.from(s).sort((a, b) => b - a);
+  }, [publications]);
+
+  // filter publications by year range
+  const filteredPublications = useMemo(() => {
+    const startNum = startYear ? parseInt(startYear) : undefined;
+    const endNum = endYear ? parseInt(endYear) : undefined;
+
+    return publications.filter((p) => {
+      if (startNum !== undefined && p.year < startNum) return false;
+      if (endNum !== undefined && p.year > endNum) return false;
+      return true;
+    });
+  }, [publications, startYear, endYear]);
+
+  const displayPublications = filteredPublications.slice(0, 5);
+
+  const fullName = [fname, lname].filter(Boolean).join(" ") || "—";
+  const avatarLetter = fullName.trim()[0]?.toUpperCase() ?? "U";
+
   return (
-    <Box
-      sx={{
-        p: 4,
-        background: "#dce6f7",
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "flex-start",
-      }}
-    >
+    <Box>
+      
+
       <Box
         sx={{
-          backgroundColor: "white",
-          borderRadius: 2,
-          boxShadow: 2,
-          maxWidth: 800,
-          width: "100%",
-          overflow: "hidden",
+          p: 4,
+          background: "#dce6f7",
+          minHeight: "100vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "flex-start",
         }}
       >
-        {/* Gradient Top Bar */}
-        <Box
+        <Paper
+          elevation={0}
           sx={{
-            height: 80,
-            background: "linear-gradient(to right, #dbeafe, #fff7ed)", // ปรับสี gradient ตามรูป
-            borderTopLeftRadius: 8,
-            borderTopRightRadius: 8,
+            backgroundColor: "white",
+            borderRadius: 2,
+            boxShadow: 2,
+            maxWidth: 800,
+            width: "100%",
+            overflow: "hidden",
           }}
-        />
+        >
+          {/* Gradient Top Bar */}
+          <Box
+            sx={{
+              height: 80,
+              background: "linear-gradient(to right, #dbeafe, #fff7ed)",
+              borderTopLeftRadius: 8,
+              borderTopRightRadius: 8,
+            }}
+          />
 
-        {/* Content */}
-        <Box sx={{ p: 3 }}>
-          {/* Profile */}
-          <Box display="flex" gap={2} alignItems="center" mb={2}>
-            <Avatar
-              sx={{
-                bgcolor: deepPurple[300],
-                width: 80,
-                height: 80,
-                fontSize: "2rem",
-              }}
-            >
-              {userData.name.charAt(0)}
-            </Avatar>
-            <Box>
-              <Typography variant="h6" fontWeight="bold" color="primary">
-                {userData.name}
-              </Typography>
-              <Typography
-                variant="body2"
-                sx={{ color: "text.secondary", textDecoration: "underline" }}
+          {/* Content */}
+          <Box sx={{ p: 3 }}>
+            {/* Profile */}
+            <Box display="flex" gap={2} alignItems="center" mb={2}>
+              <Avatar
+                sx={{
+                  bgcolor: deepPurple[300],
+                  width: 80,
+                  height: 80,
+                  fontSize: "2rem",
+                }}
               >
-                {userData.email}
+                {avatarLetter}
+              </Avatar>
+              <Box>
+                <Typography variant="h6" fontWeight="bold" color="primary">
+                  {fullName}
+                </Typography>
+
+                {loadingProfile ? (
+                  <Typography color="text.secondary">Loading profile…</Typography>
+                ) : profileError ? (
+                  <Alert severity="error" sx={{ mt: 0.5, maxWidth: 420 }}>
+                    {profileError}
+                  </Alert>
+                ) : (
+                  <>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "text.secondary", textDecoration: "underline" }}
+                    >
+                      {email || "—"}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Tel : {tel ? `+66 ${tel}` : "—"}
+                    </Typography>
+                  </>
+                )}
+              </Box>
+            </Box>
+
+            {/* Year Filter */}
+            <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 3 }}>
+              <Typography color="text.primary">Start :</Typography>
+              <FormControl size="small" sx={{ minWidth: 80 }}>
+                <Select
+                  value={startYear}
+                  onChange={(e) => setStartYear(e.target.value)}
+                  displayEmpty
+                >
+                  <MenuItem value="">Year</MenuItem>
+                  {allYears.map((year) => (
+                    <MenuItem key={year} value={String(year)}>
+                      {year}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <Typography>—</Typography>
+
+              <Typography color="text.primary">End :</Typography>
+              <FormControl size="small" sx={{ minWidth: 80 }}>
+                <Select
+                  value={endYear}
+                  onChange={(e) => setEndYear(e.target.value)}
+                  displayEmpty
+                >
+                  <MenuItem value="">Year</MenuItem>
+                  {allYears.map((year) => (
+                    <MenuItem key={year} value={String(year)}>
+                      {year}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Stack>
+
+            {/* Publications */}
+            <Box mb={3}>
+              <Typography color="text.primary" mb={2} variant="h6" fontWeight={"bold"}>
+                Latest Publication
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Role : {userData.role} &nbsp; Tel : {userData.tel}
-              </Typography>
+
+              {loadingPubs ? (
+                <Typography>Loading publications…</Typography>
+              ) : pubsError ? (
+                <Alert severity="error" sx={{ maxWidth: 520 }}>{pubsError}</Alert>
+              ) : displayPublications.length === 0 ? (
+                <Typography color="text.secondary">
+                  No public publications found.
+                </Typography>
+              ) : (
+                displayPublications.map((pub) => (
+                  <Typography key={pub.id} mb={1} color="text.primary">
+                    <Link href={`/pub_details?id=${pub.id}`} underline="hover">
+                      {pub.title}
+                    </Link>{" "}
+                    ({pub.year})
+                  </Typography>
+                ))
+              )}
+            </Box>
+
+            {/* Buttons */}
+            <Box textAlign="right" display="flex" flexDirection="row" gap={1} justifyContent="flex-end">
+              <MuiLink component={NextLink} href={"/"} underline="none">
+                <Button variant="contained" sx={{ bgcolor: "#002776" }}>
+                  Back
+                </Button>
+              </MuiLink>
+              <MuiLink component={NextLink} href={"/profile/edit"} underline="none">
+                <Button variant="contained" sx={{ bgcolor: "#dc8000ff" }}>
+                  Edit Profile
+                </Button>
+              </MuiLink>
             </Box>
           </Box>
-
-          {/* Year Filter */}
-          <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 3 }}>
-            <Typography color="text.primary">Start :</Typography>
-            <FormControl size="small" sx={{ minWidth: 80 }}>
-              <Select
-                value={startYear}
-                onChange={(e) => setStartYear(e.target.value)}
-                displayEmpty
-              >
-                <MenuItem value="">Year</MenuItem>
-                {allYears.map((year) => (
-                  <MenuItem key={year} value={year}>
-                    {year}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <Typography>—</Typography>
-
-            <Typography color="text.primary">End :</Typography>
-            <FormControl size="small" sx={{ minWidth: 80 }}>
-              <Select
-                value={endYear}
-                onChange={(e) => setEndYear(e.target.value)}
-                displayEmpty
-              >
-                <MenuItem value="">Year</MenuItem>
-                {allYears.map((year) => (
-                  <MenuItem key={year} value={year}>
-                    {year}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Stack>
-
-          {/* Publications */}
-          <Box mb={3}>
-            {filteredPublications.map((pub, i) => (
-              <Typography key={i} mb={1} color="text.primary">
-                <Link href={pub.link} underline="hover">
-                  {pub.title}
-                </Link>{" "}
-                ({pub.year})
-              </Typography>
-            ))}
-          </Box>
-
-          {/* Back Button */}
-          <Box textAlign="right">
-            <Button
-              variant="contained"
-              sx={{ bgcolor: "#002776" }}
-              onClick={() => console.log("Back clicked")}
-            >
-              Back
-            </Button>
-          </Box>
-        </Box>
+        </Paper>
       </Box>
     </Box>
   );
-};
-
-export default ProfileDashboard;
+}

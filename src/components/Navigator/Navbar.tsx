@@ -7,8 +7,8 @@ import {
 } from "@mui/material";
 import { Person, Logout } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
-// If you want client-side navigation with <Link>, you can:
-// import NextLink from "next/link";
+
+type Role = 0 | 1 | 2 | null; // 0=admin, 1=staff, 2=professor
 
 export default function Navbar() {
   const router = useRouter();
@@ -16,36 +16,34 @@ export default function Navbar() {
   const [fname, setFname] = useState("");
   const [lname, setLname] = useState("");
   const [email, setEmail] = useState("");
+  const [role, setRole] = useState<Role>(null);
   const [loadingUser, setLoadingUser] = useState(true);
   const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/me", { credentials: "include" });
+        const res = await fetch("/api/me", { credentials: "include", cache: "no-store" });
         const data = await res.json().catch(() => ({}));
         if (data?.loggedIn) {
           setFname(data.fname || "");
           setLname(data.lname || "");
           setEmail(data.email || "");
+          setRole(
+            typeof data.mem_type === "number" ? (data.mem_type as Role) : null
+          );
         } else {
-          setFname("");
-          setLname("");
-          setEmail("");
+          setFname(""); setLname(""); setEmail(""); setRole(null);
         }
-      } catch (e) {
-        setFname("");
-        setLname("");
-        setEmail("");
+      } catch {
+        setFname(""); setLname(""); setEmail(""); setRole(null);
       } finally {
         setLoadingUser(false);
       }
     })();
   }, []);
 
-  const handleOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
+  const handleOpen = (e: React.MouseEvent<HTMLElement>) => setAnchorEl(e.currentTarget);
   const handleClose = () => setAnchorEl(null);
 
   const handleProfile = () => {
@@ -57,43 +55,88 @@ export default function Navbar() {
     if (loggingOut) return;
     setLoggingOut(true);
     try {
-      const res = await fetch("/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
-      });
-      if (!res.ok) {
-        // Optional: show a toast/snackbar here
-        console.error("Logout failed");
-      }
-    } catch (e) {
-      console.error("Logout error:", e);
-    } finally {
-      // Clear local UI state no matter what
-      setFname("");
-      setLname("");
-      setEmail("");
-      handleClose();
-      setLoggingOut(false);
-      // Navigate & refresh so anything relying on the session updates
-      router.replace("/");
-      router.refresh();
-    }
+      await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+    } catch {}
+    setFname(""); setLname(""); setEmail(""); setRole(null);
+    handleClose();
+    setLoggingOut(false);
+    router.replace("/");
+    router.refresh();
   };
+
+  // --------- role-based center menu -------------
+  const renderMenu = () => {
+    if (!email) return null; // not logged in -> no center menu (or put public links if you want)
+
+    // Admin (0): User Management, Add User, Audit Log
+    if (role === 0) {
+      return (
+        <>
+          <MUILink href="/manage/manage_user" underline="hover" color="primary.dark" fontSize={14}>
+            User Management
+          </MUILink>
+          <MUILink href="/manage/add_user" underline="hover" color="primary.dark" fontSize={14}>
+            Add User
+          </MUILink>
+          <MUILink href="/manage/audit_log" underline="hover" color="primary.dark" fontSize={14}>
+            Audit Log
+          </MUILink>
+        </>
+      );
+    }
+
+    // Staff (1): Review Publication, Confirm Publication, User Management
+    if (role === 1) {
+      return (
+        <>
+          <MUILink href="/review_publication" underline="hover" color="primary.dark" fontSize={14}>
+            Review Publication
+          </MUILink>
+          <MUILink href="/manage/manage_user" underline="hover" color="primary.dark" fontSize={14}>
+            User Management
+          </MUILink>
+        </>
+      );
+    }
+
+    // Professor (2 or default): My Publications, Add Publication, User Manual
+    return (
+      <>
+        <MUILink href="/my_publication" underline="hover" color="primary.dark" fontSize={14}>
+          My Publications
+        </MUILink>
+        <MUILink href="/add_publication" underline="hover" color="primary.dark" fontSize={14}>
+          Add Publication
+        </MUILink>
+        <MUILink href="/user_manual" underline="hover" color="primary.dark" fontSize={14}>
+          User Manual
+        </MUILink>
+      </>
+    );
+  };
+  // ---------------------------------------------
 
   return (
     <Box
-      display="flex"
-      flexDirection="row"
-      alignItems="center"
-      justifyContent="space-between"
-      width="100%"
-      px={4}
-      py={2}
-      bgcolor="#b9c9f2"
+      component="header"
+      sx={{
+        position: "sticky",
+        top: 0,
+        zIndex: (theme) => theme.zIndex.appBar,
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        width: "100%",
+        px: 4,
+        py: 2,
+        bgcolor: "#b9c9f2",
+        borderBottom: "1px solid rgba(0,0,0,0.08)",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+      }}
     >
       {/* Left: Logo (click → home) */}
-      {/* If you want Next.js Link: replace MUILink with <NextLink href="/" passHref> */}
-      <MUILink href="/" style={{ textDecoration: "none", color: "inherit" }}>
+      <MUILink href="/" sx={{ textDecoration: "none", color: "inherit" }}>
         <Box display="flex" flexDirection="row" alignItems="center" sx={{ cursor: "pointer" }}>
           <img src="/psu_logo.png" alt="Logo" width={48} height={80} />
           <Box display="flex" flexDirection="column" ml={2} lineHeight={1}>
@@ -107,32 +150,9 @@ export default function Navbar() {
         </Box>
       </MUILink>
 
-      {/* Center: Menu */}
+      {/* Center: Role-based Menu */}
       <Box display="flex" alignItems="center" gap={4}>
-        <MUILink href="/my_publication" underline="hover" color="primary.dark" fontSize={14}>
-          My Publications
-        </MUILink>
-        <MUILink href="/add_publication" underline="hover" color="primary.dark" fontSize={14}>
-          Add Publication
-        </MUILink>
-        <MUILink href="#" underline="hover" color="primary.dark" fontSize={14}>
-          Review Publication
-        </MUILink>
-        <MUILink href="#" underline="hover" color="primary.dark" fontSize={14}>
-          Confirm Publication
-        </MUILink>
-        <MUILink href="#" underline="hover" color="primary.dark" fontSize={14}>
-          User Management
-        </MUILink>
-        <MUILink href="#" underline="hover" color="primary.dark" fontSize={14}>
-          Add User
-        </MUILink>
-        <MUILink href="#" underline="hover" color="primary.dark" fontSize={14}>
-          Audit Log
-        </MUILink>
-        <MUILink href="#" underline="hover" color="primary.dark" fontSize={14}>
-          User Manual
-        </MUILink>
+        {!loadingUser && renderMenu()}
       </Box>
 
       {/* Right: User or Login */}
@@ -159,30 +179,16 @@ export default function Navbar() {
               anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
               transformOrigin={{ vertical: "top", horizontal: "right" }}
               PaperProps={{
-                sx: {
-                  borderRadius: 2,
-                  minWidth: 180,
-                  boxShadow: "0px 4px 20px rgba(0,0,0,0.1)",
-                },
+                sx: { borderRadius: 2, minWidth: 180, boxShadow: "0px 4px 20px rgba(0,0,0,0.1)" },
               }}
             >
-              <MenuItem
-                onClick={handleProfile}
-                sx={{ py: 1.5, px: 2, "&:hover": { bgcolor: "#f0f4ff" } }}
-              >
-                <ListItemIcon>
-                  <Person fontSize="small" />
-                </ListItemIcon>
+              <MenuItem onClick={handleProfile} sx={{ py: 1.5, px: 2, "&:hover": { bgcolor: "#f0f4ff" } }}>
+                <ListItemIcon><Person fontSize="small" /></ListItemIcon>
                 <Typography variant="body2">Profile</Typography>
               </MenuItem>
 
-              <MenuItem
-                onClick={handleLogout}
-                sx={{ py: 1.5, px: 2, "&:hover": { bgcolor: "#ffe6e6" } }}
-              >
-                <ListItemIcon>
-                  <Logout fontSize="small" color="error" />
-                </ListItemIcon>
+              <MenuItem onClick={handleLogout} sx={{ py: 1.5, px: 2, "&:hover": { bgcolor: "#ffe6e6" } }}>
+                <ListItemIcon><Logout fontSize="small" color="error" /></ListItemIcon>
                 <Typography variant="body2" color="error">Logout</Typography>
               </MenuItem>
             </Menu>
@@ -201,4 +207,3 @@ export default function Navbar() {
     </Box>
   );
 }
-

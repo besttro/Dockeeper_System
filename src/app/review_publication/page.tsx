@@ -2,7 +2,7 @@
 
 import { Box, Button, Typography, Divider, Link } from "@mui/material";
 import Navbar from "../../components/Navigator/Navbar";
-import ReviewPublicationForm from "@/components/Forms/ReviewPublicationForm";
+import ManagePublicationTable from "@/components/Tables/ManagePublicationTable";
 
 export default function MyPublication() {
   
@@ -10,7 +10,7 @@ export default function MyPublication() {
     <Box>
       <Navbar />
       <Box bgcolor="#dce6f7" minHeight="100vh" py={4}>
-        <ReviewPublicationForm />
+        <ManagePublicationTable />
       </Box>
     </Box>
   );
