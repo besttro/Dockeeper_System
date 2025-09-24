@@ -1,11 +1,10 @@
-// app/api/publication/route.ts  (only the POST part shown)
+// app/api/publication/route.ts
 import { NextResponse } from "next/server";
 import path from "node:path";
 import fs from "node:fs/promises";
 import crypto from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/auth";
-
 
 function splitName(input: string): { fname: string; lname: string } | null {
   if (!input) return null;
@@ -22,28 +21,24 @@ export async function GET() {
     const publications = await prisma.publication.findMany({
       orderBy: { pub_id: "desc" },
       include: {
-        participations: {
-          include: {
-            user: true, // brings user_email if present
-          },
-        },
+        participations: { include: { user: true } },
       },
     });
 
-    // Map to what your HomePage expects: id, title, authors, date, summary
     const result = publications.map((pub) => {
-      // Authors = list of user emails from participations that have a user
       const authors =
-        pub.participations
-          ?.map((p) => p.user?.user_email)
-          .filter((e): e is string => Boolean(e)) ?? [];
+        pub.participations?.map((p) => p.user?.user_email).filter((e): e is string => Boolean(e)) ?? [];
+
+      const desc = pub.pub_description ?? "";
+      const summary =
+        desc.length > 160 ? `${desc.slice(0, 160)}…` : (desc || "—");
 
       return {
         id: pub.pub_id,
         title: pub.pub_title,
         authors: authors.length ? authors.join(", ") : "Unknown Author",
         date: String(pub.pub_year),
-        summary: "—", // placeholder; replace if you later add a summary field
+        summary,
       };
     });
 
@@ -58,20 +53,20 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  // ✅ use session first
   const uid = await getCurrentUserId();
   if (!uid) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    // ✅ read body ONCE
     const form = await req.formData();
 
     const pub_title = String(form.get("pub_title") ?? "");
+    const pub_description = String(form.get("pub_description") ?? "");
     const pub_year = Number(form.get("pub_year") ?? NaN);
     const pub_type = Number(form.get("pub_type") ?? NaN);
     const pub_status = Number(form.get("pub_status") ?? 0);
 
     if (!pub_title.trim()) return NextResponse.json({ error: "pub_title is required" }, { status: 400 });
+    if (!pub_description.trim()) return NextResponse.json({ error: "pub_description is required" }, { status: 400 });
     if (!Number.isInteger(pub_year)) return NextResponse.json({ error: "pub_year must be an integer" }, { status: 400 });
     if (!Number.isInteger(pub_type)) return NextResponse.json({ error: "pub_type must be an integer" }, { status: 400 });
 
@@ -97,7 +92,13 @@ export async function POST(req: Request) {
     const created = await prisma.$transaction(async (tx) => {
       // 1) Publication
       const publication = await tx.publication.create({
-        data: { pub_title, pub_year, pub_type, pub_status },
+        data: {
+          pub_title,
+          pub_description,
+          pub_year,
+          pub_type,
+          pub_status,
+        },
       });
 
       // 2) Main author participation (owner)
@@ -156,4 +157,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
 }
-
