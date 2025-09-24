@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import {
   Box,
@@ -18,33 +20,20 @@ import {
   Stack,
   Pagination,
   Checkbox,
+  TextField,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EmailIcon from "@mui/icons-material/Email";
 import { Link as MuiLink } from "@mui/material";
 import NextLink from "next/link";
 
-const stats = [
-  {
-    title: "Total users",
-    value: "15,359",
-    subtitle: "Total users who have signed up",
-  },
-  {
-    title: "Pending publication",
-    value: "13,421",
-    subtitle: "Total number of publications pending approval",
-  },
-  {
-    title: "Accepted publication",
-    value: "11,192",
-    subtitle: "Total number of publication that have been accepted",
-  },
-];
-
+// --- Sample Data ---
 const usersData = Array.from({ length: 40 }, (_, i) => ({
-  name: `User ${i + 1}`,
+  firstName: `UserFirstName${i + 1}`,
+  lastName: `UserLastName${i + 1}`,
+  name: `UserFirstName${i + 1} UserLastName${i + 1}`,
   email: `user${i + 1}@example.com`,
+  // Use a simplified role assignment
   role: i % 2 === 0 ? "Professor" : "Officer",
   avatar: "",
 }));
@@ -55,13 +44,31 @@ export default function UserDashboard() {
   const [roleFilter, setRoleFilter] = useState<
     "All Roles" | "Professor" | "Officer"
   >("All Roles");
+  const [firstNameFilter, setFirstNameFilter] = useState("");
+  const [lastNameFilter, setLastNameFilter] = useState("");
 
   const rowsPerPage = 15;
 
-  const filteredUsers =
-    roleFilter === "All Roles"
-      ? usersData
-      : usersData.filter((user) => user.role === roleFilter);
+  // Calculate stats dynamically from usersData
+  const totalUsers = usersData.length;
+  const totalProfessors = usersData.filter(
+    (user) => user.role === "Professor"
+  ).length;
+  const totalOfficers = usersData.filter(
+    (user) => user.role === "Officer"
+  ).length;
+
+  const filteredUsers = usersData.filter((user) => {
+    const roleMatch = roleFilter === "All Roles" || user.role === roleFilter;
+    const firstNameMatch = user.firstName
+      .toLowerCase()
+      .includes(firstNameFilter.toLowerCase());
+    const lastNameMatch = user.lastName
+      .toLowerCase()
+      .includes(lastNameFilter.toLowerCase());
+
+    return roleMatch && firstNameMatch && lastNameMatch;
+  });
 
   const pageCount = Math.ceil(filteredUsers.length / rowsPerPage);
 
@@ -90,7 +97,21 @@ export default function UserDashboard() {
 
   const handleRoleFilterChange = (event: any) => {
     setRoleFilter(event.target.value);
-    setPage(1); // Reset to the first page when the filter changes
+    setPage(1);
+  };
+
+  const handleFirstNameFilterChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setFirstNameFilter(event.target.value);
+    setPage(1);
+  };
+
+  const handleLastNameFilterChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setLastNameFilter(event.target.value);
+    setPage(1);
   };
 
   const paginatedData = filteredUsers.slice(
@@ -105,9 +126,9 @@ export default function UserDashboard() {
         <Box display="flex" gap={2} mb={4} flexWrap="wrap">
           <Card sx={{ flex: "1 1 30%", minWidth: 250 }}>
             <CardContent>
-              <Typography variant="h6">Total users</Typography>
+              <Typography variant="h6">Total Users</Typography>
               <Typography variant="h5" fontWeight="bold" color="primary">
-                15,396
+                {totalUsers}
               </Typography>
               <Typography
                 variant="subtitle2"
@@ -120,42 +141,44 @@ export default function UserDashboard() {
           </Card>
           <Card sx={{ flex: "1 1 30%", minWidth: 250 }}>
             <CardContent>
-              <Typography variant="h6">Pending Publication</Typography>
+              <Typography variant="h6">Total Professors</Typography>
               <Typography variant="h5" fontWeight="bold" color="gray">
-                15,396
+                {totalProfessors}
               </Typography>
               <Typography
                 variant="subtitle2"
                 color="text.secondary"
                 fontSize={12}
               >
-                Total number of publications pending approval
+                Total number of users with the professor role
               </Typography>
             </CardContent>
           </Card>
           <Card sx={{ flex: "1 1 30%", minWidth: 250 }}>
             <CardContent>
-              <Typography variant="h6">Accepted Publication</Typography>
+              <Typography variant="h6">Total Officers</Typography>
               <Typography variant="h5" fontWeight="bold" color="green">
-                15,396
+                {totalOfficers}
               </Typography>
               <Typography
                 variant="subtitle2"
                 color="text.secondary"
                 fontSize={12}
               >
-                Total number of publication that have been accepted
+                Total number of users with the officer role
               </Typography>
             </CardContent>
           </Card>
         </Box>
 
-        {/* Table Header */}
+        {/* Table Header with Filters */}
         <Box
           display="flex"
           justifyContent="space-between"
           alignItems="center"
           mb={2}
+          flexWrap="wrap"
+          gap={2}
         >
           <MuiLink component={NextLink} href={"/add_user"}>
             <Button variant="contained" color="success">
@@ -163,15 +186,34 @@ export default function UserDashboard() {
             </Button>
           </MuiLink>
 
-          <Select
-            size="small"
-            value={roleFilter}
-            onChange={handleRoleFilterChange}
-          >
-            <MenuItem value="All Roles">All Roles</MenuItem>
-            <MenuItem value="Professor">Professor</MenuItem>
-            <MenuItem value="Officer">Officer</MenuItem>
-          </Select>
+          <Box display="flex" alignItems="center" gap={2}>
+            <TextField
+              label="First Name"
+              variant="outlined"
+              size="small"
+              value={firstNameFilter}
+              onChange={handleFirstNameFilterChange}
+              sx={{ bgcolor: "white", borderRadius: 1 }}
+            />
+            <TextField
+              label="Last Name"
+              variant="outlined"
+              size="small"
+              value={lastNameFilter}
+              onChange={handleLastNameFilterChange}
+              sx={{ bgcolor: "white", borderRadius: 1 }}
+            />
+            <Select
+              size="small"
+              value={roleFilter}
+              onChange={handleRoleFilterChange}
+              sx={{ bgcolor: "white", borderRadius: 1 }}
+            >
+              <MenuItem value="All Roles">All Roles</MenuItem>
+              <MenuItem value="Professor">Professor</MenuItem>
+              <MenuItem value="Officer">Officer</MenuItem>
+            </Select>
+          </Box>
         </Box>
 
         {/* Users Table */}
@@ -217,7 +259,11 @@ export default function UserDashboard() {
                         <IconButton>
                           <EmailIcon />
                         </IconButton>
-                        <MuiLink component={NextLink} href={"/profile"} passHref>
+                        <MuiLink
+                          component={NextLink}
+                          href={"/profile"}
+                          passHref
+                        >
                           <Button
                             variant="contained"
                             size="small"

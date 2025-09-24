@@ -10,6 +10,7 @@ import { Person, Logout } from "@mui/icons-material";
 import NextLink from "next/link";
 import { Link as MuiLink } from "@mui/material";
 
+
 export default function Navbar() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -94,7 +95,7 @@ export default function Navbar() {
           color="primary.dark"
           fontSize={14}
         >
-          Confirm Publication
+          Manage Publication
         </MuiLink>
         <MuiLink
           component={NextLink}
@@ -173,7 +174,7 @@ export default function Navbar() {
           >
             <MuiLink
               component={NextLink}
-              href="/edit_profile"
+              href="/profile"
               underline="none"
               color="primary.dark"
               fontSize={14}

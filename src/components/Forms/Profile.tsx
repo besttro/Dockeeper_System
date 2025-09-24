@@ -13,6 +13,8 @@ import {
   Stack,
 } from "@mui/material";
 import { deepPurple } from "@mui/material/colors";
+import NextLink from "next/link";
+import { Link as MuiLink } from "@mui/material";
 
 // --- Sample Data ---
 const userData = {
@@ -165,6 +167,14 @@ const ProfileDashboard = () => {
 
           {/* Publications */}
           <Box mb={3}>
+            <Typography
+              color="text.primary"
+              mb={2}
+              variant="h6"
+              fontWeight={"bold"}
+            >
+              Latest Publication
+            </Typography>
             {filteredPublications.map((pub, i) => (
               <Typography key={i} mb={1} color="text.primary">
                 <Link href={pub.link} underline="hover">
@@ -175,15 +185,32 @@ const ProfileDashboard = () => {
             ))}
           </Box>
 
-          {/* Back Button */}
-          <Box textAlign="right">
-            <Button
-              variant="contained"
-              sx={{ bgcolor: "#002776" }}
-              onClick={() => console.log("Back clicked")}
-            >
-              Back
-            </Button>
+          {/* Back Button ถ้าเป็นเจ้าหน้าที่ให้ back to manage_user ถ้าเป็น professor ให้ back to main page */}
+          <Box
+            textAlign="right"
+            display={"flex"}
+            flexDirection={"row"}
+            gap={1}
+            justifyContent={"flex-end"}
+          >
+            <MuiLink component={NextLink} href={"/manage/manage_user"}>
+              <Button
+                variant="contained"
+                sx={{ bgcolor: "#002776" }}
+                onClick={() => console.log("Back clicked")}
+              >
+                Back
+              </Button>
+            </MuiLink>
+            <MuiLink component={NextLink} href={"/edit_profile"}>
+              <Button
+                variant="contained"
+                sx={{ bgcolor: "#dc8000ff" }}
+                onClick={() => console.log("Back clicked")}
+              >
+                Edit Profile
+              </Button>
+            </MuiLink>
           </Box>
         </Box>
       </Box>

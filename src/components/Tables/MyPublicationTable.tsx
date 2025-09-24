@@ -14,6 +14,7 @@ import {
   Chip,
   Typography,
   Stack,
+  TextField,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
@@ -50,11 +51,16 @@ const getStatusColor = (status: Publication["status"]) => {
 
 export default function MyPublicationTable() {
   const [filter, setFilter] = useState<"All" | Publication["status"]>("All");
+  const [publicationNameFilter, setPublicationNameFilter] = useState("");
 
-  const filteredPublications =
-    filter === "All"
-      ? allPublications
-      : allPublications.filter((pub) => pub.status === filter);
+  const filteredPublications = allPublications.filter((pub) => {
+    const statusMatch = filter === "All" || pub.status === filter;
+    const nameMatch = pub.name
+      .toLowerCase()
+      .includes(publicationNameFilter.toLowerCase());
+
+    return statusMatch && nameMatch;
+  });
 
   const getButtonColor = (buttonFilter: "All" | Publication["status"]) => {
     if (filter === buttonFilter) {
@@ -140,6 +146,16 @@ export default function MyPublicationTable() {
           Waiting for Edit
         </Button>
       </Stack>
+      <Box sx={{ mb: 2 , width: 440}}>
+        <TextField
+          label="Filter by Publication Name"
+          variant="outlined"
+          size="small"
+          value={publicationNameFilter}
+          onChange={(e) => setPublicationNameFilter(e.target.value)}
+          sx={{ bgcolor: "white", borderRadius: 1, width: '100%' }}
+        />
+      </Box>
       <TableContainer
         component={Paper}
         sx={{ borderRadius: 2, boxShadow: 3, border: "2px solid #3182ce" }}

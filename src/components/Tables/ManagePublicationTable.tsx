@@ -14,10 +14,11 @@ import {
   Chip,
   Typography,
   Stack,
+  TextField,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
-import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityIcon from "@mui/icons-material/Visibility";
 
 type Publication = {
   id: number;
@@ -50,11 +51,20 @@ const getStatusColor = (status: Publication["status"]) => {
 
 export default function ManagePublicationTable() {
   const [filter, setFilter] = useState<"All" | Publication["status"]>("All");
+  const [publicationNameFilter, setPublicationNameFilter] = useState("");
+  const [professorNameFilter, setProfessorNameFilter] = useState("");
 
-  const filteredPublications =
-    filter === "All"
-      ? allPublications
-      : allPublications.filter((pub) => pub.status === filter);
+  const filteredPublications = allPublications.filter((pub) => {
+    const statusMatch = filter === "All" || pub.status === filter;
+    const nameMatch = pub.name
+      .toLowerCase()
+      .includes(publicationNameFilter.toLowerCase());
+    const professorMatch = pub.professor
+      .toLowerCase()
+      .includes(professorNameFilter.toLowerCase());
+
+    return statusMatch && nameMatch && professorMatch;
+  });
 
   const getButtonColor = (buttonFilter: "All" | Publication["status"]) => {
     if (filter === buttonFilter) {
@@ -108,7 +118,7 @@ export default function ManagePublicationTable() {
         variant="h5"
         sx={{ mb: 3, fontWeight: 600, color: "text.primary" }}
       >
-        My Publications
+        Manage Publications
       </Typography>
       <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
         <Button
@@ -140,6 +150,26 @@ export default function ManagePublicationTable() {
           Waiting for Edit
         </Button>
       </Stack>
+
+      <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
+        <TextField
+          label="Filter by Publication Name"
+          variant="outlined"
+          size="small"
+          value={publicationNameFilter}
+          onChange={(e) => setPublicationNameFilter(e.target.value)}
+          sx={{ bgcolor: "white", borderRadius: 1 }}
+        />
+        <TextField
+          label="Filter by Professor Name"
+          variant="outlined"
+          size="small"
+          value={professorNameFilter}
+          onChange={(e) => setProfessorNameFilter(e.target.value)}
+          sx={{ bgcolor: "white", borderRadius: 1 }}
+        />
+      </Stack>
+
       <TableContainer
         component={Paper}
         sx={{ borderRadius: 2, boxShadow: 3, border: "2px solid #3182ce" }}

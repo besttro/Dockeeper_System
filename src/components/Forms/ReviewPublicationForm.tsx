@@ -14,8 +14,10 @@ import {
   InputLabel,
   Link,
 } from "@mui/material";
+import NextLink from "next/link";
+import { Link as MuiLink } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import FindInPageIcon from '@mui/icons-material/FindInPage';
+import FindInPageIcon from "@mui/icons-material/FindInPage";
 import EmailIcon from "@mui/icons-material/Email";
 
 export default function ReviewPublicationForm() {
@@ -74,9 +76,11 @@ export default function ReviewPublicationForm() {
           <Typography variant="h6" fontWeight="bold">
             Review Publication
           </Typography>
-          <IconButton>
-            <CloseIcon />
-          </IconButton>
+          <MuiLink component={NextLink} href="/manage_publication">
+            <IconButton>
+              <CloseIcon />
+            </IconButton>
+          </MuiLink>
         </Box>
         <Box sx={{ p: 2 }}>
           {/* เพิ่ม padding ที่นี่เพื่อให้เนื้อหาไม่ติดขอบบน */}
@@ -106,7 +110,13 @@ export default function ReviewPublicationForm() {
                   Example Education Resource01
                 </Typography>
                 <Link href="#" underline="none">
-                  <Box display="flex" alignItems="center" gap={0.5} sx={{ color: "primary.main" }} ml={3}>
+                  <Box
+                    display="flex"
+                    alignItems="center"
+                    gap={0.5}
+                    sx={{ color: "primary.main" }}
+                    ml={3}
+                  >
                     <FindInPageIcon fontSize="small" />
                     <Typography variant="body2">Preview</Typography>
                   </Box>

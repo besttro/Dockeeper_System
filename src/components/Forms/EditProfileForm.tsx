@@ -14,6 +14,8 @@ import {
 
 import EmailIcon from "@mui/icons-material/Email";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
+import NextLink from "next/link";
+import { Link as MuiLink } from "@mui/material";
 
 export default function EditProfileForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -64,7 +66,7 @@ export default function EditProfileForm() {
             <TextField
               required
               id="outlined-required"
-              label="Your First Name"
+              label="First Name"
               fullWidth
             />
 
@@ -84,14 +86,14 @@ export default function EditProfileForm() {
             <TextField
               required
               id="outlined-required"
-              label="Your Last Name"
+              label="Last Name"
               fullWidth
             />
 
             <TextField
               required
               id="outlined-required"
-              label="Enter your new password"
+              label="Enter new password"
               type={showPassword ? "text" : "password"}
               fullWidth
               InputProps={{
@@ -108,7 +110,7 @@ export default function EditProfileForm() {
             <TextField
               required
               id="outlined-required"
-              label="Enter your new password again"
+              label="Enter new password again"
               type={showConfirmPassword ? "text" : "password"}
               fullWidth
               InputProps={{
@@ -119,11 +121,7 @@ export default function EditProfileForm() {
                         setShowConfirmPassword(!showConfirmPassword)
                       }
                     >
-                      {showConfirmPassword ? (
-                        <VisibilityOff />
-                      ) : (
-                        <Visibility />
-                      )}
+                      {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
                     </IconButton>
                   </InputAdornment>
                 ),
@@ -158,12 +156,24 @@ export default function EditProfileForm() {
                 </Typography>
               </Box>
             </Box>
-            <Button
-              variant="contained"
-              sx={{ bgcolor: "#0d2c6c", borderRadius: 2, px: 4 }}
-            >
-              Confirm
-            </Button>
+            <Box display={"flex"} flexDirection={"row"} gap={2}>
+              <MuiLink component={NextLink} href={"/profile"}>
+                <Button
+                  variant="contained"
+                  sx={{ bgcolor: "#0d2c6c", borderRadius: 2, px: 4 }}
+                >
+                  Back
+                </Button>
+              </MuiLink>
+              <MuiLink component={NextLink} href={"/manage/manage_user"}>
+                <Button
+                  variant="contained"
+                  sx={{ bgcolor: "#dc8000ff", borderRadius: 2, px: 4 }}
+                >
+                  Confirm
+                </Button>
+              </MuiLink>
+            </Box>
           </Box>
         </Box>
       </Box>
