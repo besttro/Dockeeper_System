@@ -116,7 +116,7 @@ export default function Navbar() {
         </MuiLink>
         <MuiLink
           component={NextLink}
-          href="#"
+          href="/audit_log"
           underline="hover"
           color="primary.dark"
           fontSize={14}

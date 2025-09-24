@@ -217,7 +217,7 @@ export default function UserDashboard() {
                         <IconButton>
                           <EmailIcon />
                         </IconButton>
-                        <MuiLink component={NextLink} href={"#"} passHref>
+                        <MuiLink component={NextLink} href={"/profile"} passHref>
                           <Button
                             variant="contained"
                             size="small"
