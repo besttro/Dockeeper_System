@@ -23,6 +23,7 @@ model User {
 model Publication {
   pub_id     Int    @id @default(autoincrement())
   pub_title  String
+  pub_description  String
   pub_year   Int
   pub_status Int
   pub_type   Int   
