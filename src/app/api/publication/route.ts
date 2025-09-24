@@ -19,19 +19,26 @@ function splitName(input: string): { fname: string; lname: string } | null {
 export async function GET() {
   try {
     const publications = await prisma.publication.findMany({
+      where: { pub_status: 1 },                  // ← only Public
       orderBy: { pub_id: "desc" },
-      include: {
-        participations: { include: { user: true } },
-      },
+      include: { participations: { include: { user: true } } },
     });
+
+    const typeMap: Record<number, "journal" | "international"> = {
+      0: "journal",
+      1: "international",
+    };
 
     const result = publications.map((pub) => {
       const authors =
-        pub.participations?.map((p) => p.user?.user_email).filter((e): e is string => Boolean(e)) ?? [];
+        pub.participations
+          ?.map((p) => p.user?.user_email)
+          .filter((e): e is string => Boolean(e)) ?? [];
 
       const desc = pub.pub_description ?? "";
-      const summary =
-        desc.length > 160 ? `${desc.slice(0, 160)}…` : (desc || "—");
+      const summary = desc.length > 160 ? `${desc.slice(0, 160)}…` : (desc || "—");
+
+      const type = typeMap[pub.pub_type as number] ?? "unknown";
 
       return {
         id: pub.pub_id,
@@ -39,18 +46,17 @@ export async function GET() {
         authors: authors.length ? authors.join(", ") : "Unknown Author",
         date: String(pub.pub_year),
         summary,
+        type,
       };
     });
 
     return NextResponse.json(result, { status: 200 });
   } catch (error: any) {
     console.error("GET /api/publication error:", error);
-    return NextResponse.json(
-      { error: error.message ?? "Failed to fetch publications" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message ?? "Failed to fetch publications" }, { status: 500 });
   }
 }
+
 
 export async function POST(req: Request) {
   const uid = await getCurrentUserId();

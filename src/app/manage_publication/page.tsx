@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Button, Typography, Divider, Link } from "@mui/material";
+import { Box  } from "@mui/material";
 import Navbar from "../../components/Navigator/Navbar";
 import ManagePublicationTable from "@/components/Tables/ManagePublicationTable";
 

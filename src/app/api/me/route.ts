@@ -5,23 +5,23 @@ import { getCurrentUserId } from "@/lib/auth";
 
 export async function GET() {
   const uid = await getCurrentUserId();
-  if (!uid) return NextResponse.json({ loggedIn: false }, { status: 200 });
+  if (!uid) return NextResponse.json({ loggedIn: false });
 
+  // include member to get mem_type
   const user = await prisma.user.findUnique({
     where: { user_id: uid },
-    select: {
-      user_email: true,
-      member: { select: { mem_fname: true, mem_lname: true } },
-    },
+    include: { member: true },
   });
 
-  if (!user) return NextResponse.json({ loggedIn: false }, { status: 200 });
+  if (!user) return NextResponse.json({ loggedIn: false });
 
   return NextResponse.json({
     loggedIn: true,
     email: user.user_email,
     fname: user.member?.mem_fname ?? "",
     lname: user.member?.mem_lname ?? "",
+    mem_type: user.member?.mem_type ?? null, // 0 admin, 1 staff, 2 professor
   });
 }
+
 

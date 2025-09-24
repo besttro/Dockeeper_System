@@ -84,16 +84,18 @@ const LogTable = () => {
     // แก้ไขโค้ดส่วนนี้ให้แสดงวันที่และเวลาปัจจุบันแบบง่ายๆ
     const updateDateTime = () => {
       const now = new Date();
-      setCurrentDateTime(now.toLocaleString("th-TH", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false,
-      }));
+      setCurrentDateTime(
+        now.toLocaleString("th-TH", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        })
+      );
     };
 
     updateDateTime();
@@ -272,10 +274,11 @@ const LogTable = () => {
           size="small"
           value={searchName}
           onChange={(e) => setSearchName(e.target.value)}
+          sx={{ bgcolor: "white", borderRadius: 1 }}
         />
 
         {/* Filter by Role */}
-        <FormControl sx={{ minWidth: 150 }} size="small">
+        <FormControl sx={{ minWidth: 150, bgcolor: "white", borderRadius: 1 }} size="small">
           <InputLabel>เลือก Role</InputLabel>
           <Select
             value={selectedRole}
