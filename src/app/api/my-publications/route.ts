@@ -1,7 +1,15 @@
 // app/api/my-publications/route.ts
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/auth";
+
+interface Publication {
+  pub_id: number;
+  pub_title: string;
+  pub_status: number;
+  pub_year: number
+}
 
 function statusLabel(n: number) {
   return n === 1 ? "Public" : n === 2 ? "Waiting for Edit" : "Pending";
@@ -17,7 +25,7 @@ export async function GET() {
     select: { pub_id: true, pub_title: true, pub_status: true, pub_year: true },
   });
 
-  const result = pubs.map((p) => ({
+  const result = pubs.map((p: Publication) => ({
     id: p.pub_id,
     name: p.pub_title,
     status: statusLabel(p.pub_status) as "Public" | "Pending" | "Waiting for Edit",

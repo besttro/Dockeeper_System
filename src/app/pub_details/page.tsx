@@ -1,15 +1,11 @@
-"use client";
+// src/app/pub_details/page.tsx
 
-import { useState } from "react";
-import { Box, Button, Typography, Divider, Link } from "@mui/material";
+import { Box, Typography, Divider, Link } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
 import FindInPageIcon from '@mui/icons-material/FindInPage';
 import Navbar from "../../components/Navigator/Navbar";
 
-export default function HomePage() {
-  const [search, setSearch] = useState("");
-
-  //mock data publication
+export default function PubDetailPage() {
 
   return (
     <Box>

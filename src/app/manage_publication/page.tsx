@@ -1,6 +1,6 @@
-"use client";
+// src/app/manage_publication/page.tsx
 
-import { Box  } from "@mui/material";
+import { Box } from "@mui/material";
 import Navbar from "../../components/Navigator/Navbar";
 import ManagePublicationTable from "@/components/Tables/ManagePublicationTable";
 

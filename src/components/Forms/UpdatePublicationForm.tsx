@@ -1,3 +1,4 @@
+// src/components/Forms/UpdatePublicationForm.tsx
 "use client";
 
 import { useState } from "react";
@@ -19,10 +20,10 @@ import FileUploadIcon from "@mui/icons-material/FileUpload";
 export default function UpdatePublicationForm() {
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
-  const [coAuthor, setCoAuthor] = useState("");
+  // const [coAuthor, setCoAuthor] = useState("");
   const [date, setDate] = useState("");
   const [description, setDescription] = useState("");
-  const [type, setType] = useState("");
+  // const [type, setType] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [coAuthors, setCoAuthors] = useState<string[]>([""]);
   const options = ["Option 1", "Option 2", "Option 3", "Option 4"];
@@ -59,10 +60,10 @@ export default function UpdatePublicationForm() {
     console.log({
       title,
       author,
-      coAuthor,
+      coAuthors,
       date,
       description,
-      type,
+      selectedOptions,
       file,
     });
   };
@@ -214,6 +215,7 @@ export default function UpdatePublicationForm() {
             onChange={(event, newValue) => setSelectedOptions(newValue)}
             renderTags={(value: string[], getTagProps) =>
               value.map((option, index) => (
+                // eslint-disable-next-line react/jsx-key
                 <Chip
                   label={option}
                   {...getTagProps({ index })}

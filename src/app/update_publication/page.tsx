@@ -1,7 +1,6 @@
-"use client";
+// src/app/update_publication/page.tsx
 
-import { useState } from "react";
-import { Box, Button, Typography, Divider, Link } from "@mui/material";
+import { Box } from "@mui/material";
 import Navbar from "../../components/Navigator/Navbar";
 import UpdatePublicationForm from "@/components/Forms/UpdatePublicationForm";
 
