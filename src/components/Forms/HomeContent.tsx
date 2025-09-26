@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import CloseIcon from "@mui/icons-material/Close";
-import Slidebar from "@/components/Navigator/Slidebar";
+import Slidebar from "@/components/Navigator/Sidebar";
 
 type Publication = {
   id: number;
@@ -19,7 +19,7 @@ type Publication = {
   type: "journal" | "international" | "unknown";
 };
 
-export default function HomePage() {
+export default function HomeContent() {
   const [search, setSearch] = useState("");
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [publications, setPublications] = useState<Publication[]>([]);
@@ -250,4 +250,3 @@ export default function HomePage() {
     </Box>
   );
 }
-

@@ -1,3 +1,5 @@
+// src/app/profile/page.tsx
+
 import { Box } from "@mui/material";
 import Navbar from "../../components/Navigator/Navbar";
 import ProfileDashboard from "../../components/Forms/Profile"

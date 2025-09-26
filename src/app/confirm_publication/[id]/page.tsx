@@ -1,4 +1,4 @@
-"use client";
+// src/app/confirm_publication/[id]/page.tsx
 
 import { Box } from "@mui/material";
 import Navbar from "../../../components/Navigator/Navbar";

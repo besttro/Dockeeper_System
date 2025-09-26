@@ -1,3 +1,5 @@
+// src/app/login/page.tsx
+
 import { Box, Typography } from "@mui/material";
 import Image from "next/image";
 import LoginForm from "@/components/Forms/LoginForm";
@@ -61,4 +63,3 @@ export default function LoginPage() {
     </Box>
   );
 }
-

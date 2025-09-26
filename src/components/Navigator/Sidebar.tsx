@@ -1,8 +1,10 @@
+// src/components/Navigator/Sidebar.tsx
+
 import React from "react";
-import { Box, Typography, Paper, Link } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import Image from "next/image";
 
-export default function Slidebar() {
+export default function Sidebar() {
   return (
     <Box
       width={250}

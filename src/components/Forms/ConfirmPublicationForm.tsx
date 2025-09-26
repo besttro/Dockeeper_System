@@ -1,4 +1,5 @@
-// components/Forms/ConfirmPublicationForm.tsx
+// src/components/Forms/ConfirmPublicationForm.tsx
+
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
@@ -185,5 +186,3 @@ export default function ConfirmPublicationForm() {
     </Box>
   );
 }
-
-

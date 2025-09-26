@@ -1,4 +1,4 @@
-// components/Tables/MyPublicationTable.tsx
+// src/components/Tables/MyPublicationTable.tsx
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
@@ -168,7 +168,3 @@ export default function MyPublicationTable() {
     </Box>
   );
 }
-
-
-
-

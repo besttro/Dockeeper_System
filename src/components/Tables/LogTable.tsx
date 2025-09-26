@@ -1,4 +1,4 @@
-// components/Tables/LogTable.tsx
+// src/components/Tables/LogTable.tsx
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";

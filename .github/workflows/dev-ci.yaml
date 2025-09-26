@@ -2,9 +2,9 @@ name: Development CI
 
 on:
   push:
-    branches: [ "development" ]
+    branches: [ "bugfix/backupVersion" ]
   pull_request:
-    branches: [ "development" ]
+    branches: [ "bugfix/backupVersion" ]
 
 jobs:
   # Job 1: Lint

@@ -1,6 +1,8 @@
+// src/components/template.tsx
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import {
   Box,
   Button,
@@ -13,7 +15,7 @@ import {
 import FilterListIcon from "@mui/icons-material/FilterList";
 import Image from "next/image";
 
-export default function HomePage() {
+export default function Template() {
   const [search, setSearch] = useState("");
 
   return (

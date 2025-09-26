@@ -1,4 +1,5 @@
 // app/api/profile/publications/route.ts
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/auth";
@@ -27,11 +28,11 @@ export async function GET() {
 
     const typeMap: Record<number, "journal" | "international"> = { 0: "journal", 1: "international" };
 
-    const result = pubs.map((p) => {
+    const result = pubs.map((p: any) => {
       const authors =
         p.participations
-          .map((pa) => pa.user?.user_email)
-          .filter((x): x is string => Boolean(x)) ?? [];
+          .map((pa: any) => pa.user?.user_email)
+          .filter((x: any): x is string => Boolean(x)) ?? [];
       const desc = p.pub_description ?? "";
       const summary = desc.length > 160 ? `${desc.slice(0, 160)}…` : (desc || "—");
 
