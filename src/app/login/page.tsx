@@ -1,13 +1,10 @@
-"use client";
+// src/app/login/page.tsx
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Box, Typography, TextField, Button } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import Image from "next/image";
 import LoginForm from "@/components/Forms/LoginForm";
 
 export default function LoginPage() {
-  const router = useRouter();
 
   return (
     <Box sx={{ display: "flex", minHeight: "100vh", backgroundColor: "white" }}>

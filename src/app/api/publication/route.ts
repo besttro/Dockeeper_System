@@ -1,4 +1,5 @@
-// app/api/publication/route.ts
+// src/app/api/publication/route.ts
+
 import { NextResponse } from "next/server";
 import path from "node:path";
 import fs from "node:fs/promises";
@@ -29,11 +30,11 @@ export async function GET() {
       1: "international",
     };
 
-    const result = publications.map((pub) => {
+    const result = publications.map((pub: any) => {
       const authors =
         pub.participations
-          ?.map((p) => p.user?.user_email)
-          .filter((e): e is string => Boolean(e)) ?? [];
+          ?.map((p: any) => p.user?.user_email)
+          .filter((e: any): e is string => Boolean(e)) ?? [];
 
       const desc = pub.pub_description ?? "";
       const summary = desc.length > 160 ? `${desc.slice(0, 160)}…` : (desc || "—");
@@ -95,7 +96,7 @@ export async function POST(req: Request) {
     await fs.writeFile(filePath, buf);
     const fileUrl = `/uploads/${fileName}`;
 
-    const created = await prisma.$transaction(async (tx) => {
+    const created = await prisma.$transaction(async (tx: any) => {
       // 1) Publication
       const publication = await tx.publication.create({
         data: {

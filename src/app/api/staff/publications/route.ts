@@ -1,4 +1,5 @@
 // app/api/staff/publications/route.ts
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/auth";
@@ -32,7 +33,7 @@ export async function GET() {
       },
     });
 
-    const rows = pubs.map((p) => {
+    const rows = pubs.map((p: any) => {
       const owner = p.participations?.[0];
       const fullName =
         owner?.user?.member

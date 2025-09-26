@@ -1,4 +1,6 @@
-// LogTable.js
+// src/components/Tables/LogTable.tsx
+"use client";
+
 import React, { useState, useEffect } from "react";
 import {
   Box,
