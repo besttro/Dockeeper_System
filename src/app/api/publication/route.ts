@@ -1,11 +1,12 @@
 // src/app/api/publication/route.ts
 
 import { NextResponse } from "next/server";
-import path from "node:path";
-import fs from "node:fs/promises";
+// import path from "node:path";
+// import fs from "node:fs/promises";
 import crypto from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/auth";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 function splitName(input: string): { fname: string; lname: string } | null {
   if (!input) return null;
@@ -20,7 +21,7 @@ function splitName(input: string): { fname: string; lname: string } | null {
 export async function GET() {
   try {
     const publications = await prisma.publication.findMany({
-      where: { pub_status: 1 },                  // ← only Public
+      where: { pub_status: 1 }, // ← only Public
       orderBy: { pub_id: "desc" },
       include: { participations: { include: { user: true } } },
     });
@@ -37,7 +38,8 @@ export async function GET() {
           .filter((e: any): e is string => Boolean(e)) ?? [];
 
       const desc = pub.pub_description ?? "";
-      const summary = desc.length > 160 ? `${desc.slice(0, 160)}…` : (desc || "—");
+      const summary =
+        desc.length > 160 ? `${desc.slice(0, 160)}…` : desc || "—";
 
       const type = typeMap[pub.pub_type as number] ?? "unknown";
 
@@ -54,14 +56,26 @@ export async function GET() {
     return NextResponse.json(result, { status: 200 });
   } catch (error: any) {
     console.error("GET /api/publication error:", error);
-    return NextResponse.json({ error: error.message ?? "Failed to fetch publications" }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message ?? "Failed to fetch publications" },
+      { status: 500 }
+    );
   }
 }
 
-
 export async function POST(req: Request) {
   const uid = await getCurrentUserId();
-  if (!uid) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!uid)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  // --- 1. สร้าง S3 Client ---
+  const s3Client = new S3Client({
+    region: process.env.AWS_REGION!,
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    },
+  });
 
   try {
     const form = await req.formData();
@@ -72,29 +86,72 @@ export async function POST(req: Request) {
     const pub_type = Number(form.get("pub_type") ?? NaN);
     const pub_status = Number(form.get("pub_status") ?? 0);
 
-    if (!pub_title.trim()) return NextResponse.json({ error: "pub_title is required" }, { status: 400 });
-    if (!pub_description.trim()) return NextResponse.json({ error: "pub_description is required" }, { status: 400 });
-    if (!Number.isInteger(pub_year)) return NextResponse.json({ error: "pub_year must be an integer" }, { status: 400 });
-    if (!Number.isInteger(pub_type)) return NextResponse.json({ error: "pub_type must be an integer" }, { status: 400 });
+    if (!pub_title.trim())
+      return NextResponse.json(
+        { error: "pub_title is required" },
+        { status: 400 }
+      );
+    if (!pub_description.trim())
+      return NextResponse.json(
+        { error: "pub_description is required" },
+        { status: 400 }
+      );
+    if (!Number.isInteger(pub_year))
+      return NextResponse.json(
+        { error: "pub_year must be an integer" },
+        { status: 400 }
+      );
+    if (!Number.isInteger(pub_type))
+      return NextResponse.json(
+        { error: "pub_type must be an integer" },
+        { status: 400 }
+      );
 
     const coAuthorsRaw = form.getAll("co_authors[]").map(String);
 
     const file = form.get("file") as unknown as File | null;
-    if (!file) return NextResponse.json({ error: "PDF file is required" }, { status: 400 });
+    if (!file)
+      return NextResponse.json(
+        { error: "PDF file is required" },
+        { status: 400 }
+      );
     if (file.type !== "application/pdf") {
-      return NextResponse.json({ error: "Only PDF files are allowed" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Only PDF files are allowed" },
+        { status: 400 }
+      );
     }
 
     // Save file to /public/uploads
     const ab = await file.arrayBuffer();
     const buf = Buffer.from(ab);
     const checksum = crypto.createHash("sha256").update(buf).digest("hex");
-    const uploadsDir = path.join(process.cwd(), "public", "uploads");
-    await fs.mkdir(uploadsDir, { recursive: true });
-    const fileName = `${checksum}.pdf`;
-    const filePath = path.join(uploadsDir, fileName);
-    await fs.writeFile(filePath, buf);
-    const fileUrl = `/uploads/${fileName}`;
+    const sanitizedTitle = pub_title
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, "") // ลบอักขระพิเศษ ยกเว้นตัวอักษร, ตัวเลข, เว้นวรรค, ขีด
+      .replace(/\s+/g, "-") // แทนที่เว้นวรรคด้วยขีด
+      .slice(0, 50); // จำกัดความยาวเพื่อไม่ให้ชื่อไฟล์ยาวเกินไป
+
+    // 2. สร้าง path และชื่อไฟล์ใหม่: user_id/sanitized-title-year.pdf
+    const fileName = `${uid}/${sanitizedTitle}-${pub_year}.pdf`;
+    const uploadParams = {
+      Bucket: process.env.S3_BUCKET_NAME!,
+      Key: fileName, // <-- ใช้ fileName ที่สร้างขึ้นใหม่
+      Body: buf,
+      ContentType: file.type,
+    };
+
+    await s3Client.send(new PutObjectCommand(uploadParams));
+
+    // --- 4. สร้าง URL ของไฟล์บน S3 ---
+    const fileUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
+    // const uploadsDir = path.join(process.cwd(), "public", "uploads");
+    // await fs.mkdir(uploadsDir, { recursive: true });
+    // const fileName = `${checksum}.pdf`;
+    // const filePath = path.join(uploadsDir, fileName);
+    // await fs.writeFile(filePath, buf);
+    // const fileUrl = `/uploads/${fileName}`;
 
     const created = await prisma.$transaction(async (tx: any) => {
       // 1) Publication
@@ -110,7 +167,12 @@ export async function POST(req: Request) {
 
       // 2) Main author participation (owner)
       await tx.participation.create({
-        data: { pub_id: publication.pub_id, user_id: uid, co_name: null, part_status: 0 },
+        data: {
+          pub_id: publication.pub_id,
+          user_id: uid,
+          co_name: null,
+          part_status: 0,
+        },
       });
 
       // 3) Co-authors
@@ -126,17 +188,29 @@ export async function POST(req: Request) {
         });
 
         if (member) {
-          const u = await tx.user.findFirst({ where: { mem_id: member.mem_id } });
+          const u = await tx.user.findFirst({
+            where: { mem_id: member.mem_id },
+          });
           if (u) {
             await tx.participation.create({
-              data: { pub_id: publication.pub_id, user_id: u.user_id, co_name: null, part_status: 1 },
+              data: {
+                pub_id: publication.pub_id,
+                user_id: u.user_id,
+                co_name: null,
+                part_status: 1,
+              },
             });
             continue;
           }
         }
 
         await tx.participation.create({
-          data: { pub_id: publication.pub_id, user_id: null, co_name: `${name.fname}_${name.lname}`, part_status: 1 },
+          data: {
+            pub_id: publication.pub_id,
+            user_id: null,
+            co_name: `${name.fname}_${name.lname}`,
+            part_status: 1,
+          },
         });
       }
 
