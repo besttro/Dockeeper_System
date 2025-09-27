@@ -218,7 +218,7 @@ export default function HomePage() {
                   variant="h6"
                   fontWeight="bold"
                   color="primary.dark"
-                  href={`/pub_details?id=${pub.id}`}
+                  href={`/publication/${pub.id}`}
                   underline="always"
                 >
                   {pub.title}

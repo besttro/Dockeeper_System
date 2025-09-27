@@ -1,3 +1,4 @@
+// components/Tables/MyPublicationTable.tsx
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
@@ -77,13 +78,26 @@ export default function MyPublicationTable() {
     return { bgcolor: "#f0f4f7", color: "#4a5568", "&:hover": { bgcolor: "#e2e8f0" } };
   };
 
+  const handleDelete = async (id: number) => {
+    const ok = window.confirm("Delete this publication? This cannot be undone.");
+    if (!ok) return;
+    try {
+      const res = await fetch(`/api/publication/${id}`, { method: "DELETE", credentials: "include" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error ?? "Delete failed");
+      setRows((prev) => prev.filter((r) => r.id !== id));
+      alert("Deleted.");
+    } catch (e: any) {
+      alert(e?.message ?? "Delete failed");
+    }
+  };
+
   return (
     <Box sx={{ p: 4, bgcolor: "#dce6f7", minHeight: "100vh", maxWidth: 900, mx: "auto" }}>
       <Typography variant="h5" sx={{ mb: 3, fontWeight: 600, color: "text.primary" }}>
         My Publications
       </Typography>
 
-      {/* Status filters + quick title search (optional) */}
       <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 2 }} alignItems="center">
         <Stack direction="row" spacing={1}>
           <Button variant="contained" onClick={() => setFilter("All")} sx={getButtonColor("All")}>All</Button>
@@ -140,7 +154,7 @@ export default function MyPublicationTable() {
                       variant="contained"
                       sx={{ bgcolor: "#f56565" }}
                       endIcon={<DeleteIcon />}
-                      // onClick={() => handleDelete(pub.id)}
+                      onClick={() => handleDelete(pub.id)}
                     >
                       Delete
                     </Button>
@@ -154,6 +168,7 @@ export default function MyPublicationTable() {
     </Box>
   );
 }
+
 
 
 
