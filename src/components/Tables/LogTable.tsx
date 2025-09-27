@@ -1,88 +1,32 @@
-// LogTable.js
-import React, { useState, useEffect } from "react";
+// components/Tables/LogTable.tsx
+"use client";
+
+import React, { useEffect, useMemo, useState } from "react";
 import {
-  Box,
-  Typography,
-  TextField,
-  MenuItem,
-  TableContainer,
-  Table,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableCell,
-  Link,
-  Select,
-  InputLabel,
-  FormControl,
+  Box, Typography, TextField, MenuItem, TableContainer, Table,
+  TableHead, TableBody, TableRow, TableCell, Link, Select,
+  InputLabel, FormControl, Alert
 } from "@mui/material";
 
-// --- ข้อมูลสำหรับตาราง ---
-const tableData = [
-  {
-    name: "DR.Charte Push",
-    email: "charlie.singasong@gmail.com",
-    role: "Officer",
-    action: "login",
-    time: "22/09/2025 12:50 PM",
-  },
-  {
-    name: "DR.Becky Christiansen",
-    email: "becky69@gmail.com",
-    role: "Professer",
-    action: "login",
-    time: "22/09/2025 01:50 PM",
-  },
-  {
-    name: "Luca Modric",
-    email: "MOdric@gmail.com",
-    role: "Officer",
-    action: "login",
-    time: "22/09/2025 06:50 PM",
-  },
-  {
-    name: "DR.Fermin Gijo",
-    email: "firmin4389@gmail.com",
-    role: "Professer",
-    action: "login",
-    time: "22/09/2025 09:06 PM",
-  },
-  {
-    name: "DR.Becky Christiansen",
-    email: "becky69@gmail.com",
-    role: "Professer",
-    action: "login",
-    time: "23/09/2025 00:03 AM",
-  },
-  {
-    name: "Nakarin iBoss",
-    email: "LnwzqbBoss@gmail.com",
-    role: "Officer",
-    action: "login",
-    time: "23/09/2025 08:50 AM",
-  },
-  {
-    name: "Arm Roarmama",
-    email: "mamahitarim@gmail.com",
-    role: "Professer",
-    action: "login",
-    time: "23/09/2025 09:30 AM",
-  },
-];
+type LogRow = {
+  name: string;
+  email: string;
+  role: "Admin" | "Officer" | "Professor";
+  action: string;        // "login"
+  timeISO: string;       // ISO string from server
+};
 
 const LogTable = () => {
   const [currentDateTime, setCurrentDateTime] = useState("");
   const [searchName, setSearchName] = useState("");
-  const [selectedRole, setSelectedRole] = useState("");
-  const [filteredData, setFilteredData] = useState(tableData);
+  const [selectedRole, setSelectedRole] = useState<string>("");
+  const [rows, setRows] = useState<LogRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [errText, setErrText] = useState<string | null>(null);
 
-  const [professorsCount, setProfessorsCount] = useState(0);
-  const [officersCount, setOfficersCount] = useState(0);
-  const [todayLoginsCount, setTodayLoginsCount] = useState(0);
-
+  // clock (TH locale)
   useEffect(() => {
-    // แก้ไขโค้ดส่วนนี้ให้แสดงวันที่และเวลาปัจจุบันแบบง่ายๆ
-    const updateDateTime = () => {
+    const tick = () => {
       const now = new Date();
       setCurrentDateTime(
         now.toLocaleString("th-TH", {
@@ -97,53 +41,58 @@ const LogTable = () => {
         })
       );
     };
-
-    updateDateTime();
-    const intervalId = setInterval(updateDateTime, 1000);
-    return () => clearInterval(intervalId);
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
   }, []);
 
+  // fetch logs
   useEffect(() => {
-    const profCount = tableData.filter(
-      (item) => item.role === "Professer"
-    ).length;
-    const offCount = tableData.filter((item) => item.role === "Officer").length;
+    (async () => {
+      setLoading(true);
+      setErrText(null);
+      try {
+        const res = await fetch("/api/audit-logs", { credentials: "include", cache: "no-store" });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data?.error ?? "Failed to load audit logs");
+        setRows(Array.isArray(data) ? data : []);
+      } catch (e: any) {
+        setErrText(e?.message ?? "Failed to load audit logs");
+        setRows([]);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
 
-    const now = new Date();
-    const today = now.toLocaleDateString("en-US", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
+  // filters
+  const filtered = useMemo(() => {
+    return rows.filter(r => {
+      const nameMatch = r.name.toLowerCase().includes(searchName.toLowerCase());
+      const roleMatch = !selectedRole || r.role === selectedRole;
+      return nameMatch && roleMatch;
     });
-    const loginsToday = tableData.filter((item) => {
-      const itemDate = new Date(item.time).toLocaleDateString("en-US", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      });
-      return itemDate === today;
+  }, [rows, searchName, selectedRole]);
+
+  // stats
+  const professorsCount = useMemo(
+    () => new Set(rows.filter(r => r.role === "Professor").map(r => r.email)).size,
+    [rows]
+  );
+  const officersCount = useMemo(
+    () => new Set(rows.filter(r => r.role === "Officer").map(r => r.email)).size,
+    [rows]
+  );
+  const todayLoginsCount = useMemo(() => {
+    const today = new Date();
+    const y = today.getFullYear();
+    const m = today.getMonth();
+    const d = today.getDate();
+    return rows.filter(r => {
+      const t = new Date(r.timeISO);
+      return t.getFullYear() === y && t.getMonth() === m && t.getDate() === d;
     }).length;
-
-    setProfessorsCount(profCount);
-    setOfficersCount(offCount);
-    setTodayLoginsCount(loginsToday);
-  }, []);
-
-  useEffect(() => {
-    let result = tableData;
-
-    if (searchName) {
-      result = result.filter((item) =>
-        item.name.toLowerCase().includes(searchName.toLowerCase())
-      );
-    }
-
-    if (selectedRole) {
-      result = result.filter((item) => item.role === selectedRole);
-    }
-
-    setFilteredData(result);
-  }, [searchName, selectedRole]);
+  }, [rows]);
 
   const statCardStyle = {
     p: 3,
@@ -152,122 +101,59 @@ const LogTable = () => {
     boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
     flexGrow: 1,
     minWidth: "200px",
-  };
+  } as const;
 
-  const allRoles = [...new Set(tableData.map((item) => item.role))];
+  const allRoles = ["Admin", "Officer", "Professor"];
+
+  const fmt = (iso: string) =>
+    new Date(iso).toLocaleString("th-TH", {
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false
+    });
 
   return (
-    <Box
-      sx={{
-        p: 4,
-        backgroundColor: "#dce6f7",
-        minHeight: "100vh",
-        ml: 5,
-        mr: 5,
-      }}
-    >
-      {/* ส่วนแสดงวันที่และเวลาปัจจุบัน */}
+    <Box sx={{ p: 4, backgroundColor: "#dce6f7", minHeight: "100vh", ml: 5, mr: 5 }}>
       <Box sx={{ mb: 4, textAlign: "center" }}>
-        <Typography
-          variant="h5"
-          component="h1"
-          sx={{ color: "text.secondary", fontWeight: "bold" }}
-        >
+        <Typography variant="h5" component="h1" sx={{ color: "text.secondary", fontWeight: "bold" }}>
           {currentDateTime}
         </Typography>
       </Box>
 
-      {/* ส่วนแสดงสถิติ (Stats Section) */}
-      <Box
-        sx={{
-          mb: 4,
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "16px",
-          justifyContent: "center",
-        }}
-      >
-        {/* Card 1: จำนวนอาจารย์ทั้งหมด */}
-        <Box
-          display={"flex"}
-          sx={statCardStyle}
-          justifyContent={"center"}
-          alignItems={"flex-start"}
-          flexDirection={"column"}
-        >
-          <Typography variant="body2" sx={{ color: "text.secondary" }}>
-            จำนวนอาจารย์ทั้งหมด
-          </Typography>
-          <Typography variant="body2" sx={{ color: "text.secondary" }}>
-            Total professors
-          </Typography>
-          <Typography
-            variant="h4"
-            component="div"
-            sx={{ fontWeight: "bold", mt: 1, color: "text.primary" }}
-          >
+      {errText && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {errText}
+        </Alert>
+      )}
+
+      {/* Stats */}
+      <Box sx={{ mb: 4, display: "flex", flexWrap: "wrap", gap: "16px", justifyContent: "center" }}>
+        <Box display="flex" sx={statCardStyle} justifyContent="center" alignItems="flex-start" flexDirection="column">
+          <Typography variant="body2" sx={{ color: "text.secondary" }}>จำนวนอาจารย์ทั้งหมด</Typography>
+          <Typography variant="body2" sx={{ color: "text.secondary" }}>Total professors</Typography>
+          <Typography variant="h4" sx={{ fontWeight: "bold", mt: 1, color: "text.primary" }}>
             {professorsCount} คน
           </Typography>
         </Box>
 
-        {/* Card 2: จำนวนเจ้าหน้าที่ทั้งหมด */}
-        <Box
-          display={"flex"}
-          sx={statCardStyle}
-          justifyContent={"center"}
-          alignItems={"flex-start"}
-          flexDirection={"column"}
-        >
-          <Typography variant="body2" sx={{ color: "text.secondary" }}>
-            จำนวนเจ้าหน้าที่ทั้งหมด
-          </Typography>
-          <Typography variant="body2" sx={{ color: "text.secondary" }}>
-            Total officers
-          </Typography>
-          <Typography
-            variant="h4"
-            component="div"
-            sx={{ fontWeight: "bold", mt: 1, color: "#e6bc15ff" }}
-          >
+        <Box display="flex" sx={statCardStyle} justifyContent="center" alignItems="flex-start" flexDirection="column">
+          <Typography variant="body2" sx={{ color: "text.secondary" }}>จำนวนเจ้าหน้าที่ทั้งหมด</Typography>
+          <Typography variant="body2" sx={{ color: "text.secondary" }}>Total officers</Typography>
+          <Typography variant="h4" sx={{ fontWeight: "bold", mt: 1, color: "#e6bc15ff" }}>
             {officersCount} คน
           </Typography>
         </Box>
 
-        {/* Card 3: จำนวนผู้เข้าใช้งานวันนี้ */}
-        <Box
-          display={"flex"}
-          sx={statCardStyle}
-          justifyContent={"center"}
-          alignItems={"flex-start"}
-          flexDirection={"column"}
-        >
-          <Typography variant="body2" sx={{ color: "text.secondary" }}>
-            จำนวนผู้เข้าใช้งานวันนี้
-          </Typography>
-          <Typography variant="body2" sx={{ color: "text.secondary" }}>
-            Total users login today
-          </Typography>
-          <Typography
-            variant="h4"
-            component="div"
-            sx={{ fontWeight: "bold", mt: 1, color: "green" }}
-          >
+        <Box display="flex" sx={statCardStyle} justifyContent="center" alignItems="flex-start" flexDirection="column">
+          <Typography variant="body2" sx={{ color: "text.secondary" }}>จำนวนผู้เข้าใช้งานวันนี้</Typography>
+          <Typography variant="body2" sx={{ color: "text.secondary" }}>Total users login today</Typography>
+          <Typography variant="h4" sx={{ fontWeight: "bold", mt: 1, color: "green" }}>
             {todayLoginsCount} คน
           </Typography>
         </Box>
       </Box>
 
-      {/* ส่วน Filter และ Search */}
-      <Box
-        sx={{
-          mb: 2,
-          display: "flex",
-          gap: 2,
-          flexWrap: "wrap",
-          alignItems: "center",
-        }}
-      >
-        {/* Search by Name */}
+      {/* Filters */}
+      <Box sx={{ mb: 2, display: "flex", gap: 2, flexWrap: "wrap", alignItems: "center" }}>
         <TextField
           label="ค้นหาชื่อ"
           variant="outlined"
@@ -276,8 +162,6 @@ const LogTable = () => {
           onChange={(e) => setSearchName(e.target.value)}
           sx={{ bgcolor: "white", borderRadius: 1 }}
         />
-
-        {/* Filter by Role */}
         <FormControl sx={{ minWidth: 150, bgcolor: "white", borderRadius: 1 }} size="small">
           <InputLabel>เลือก Role</InputLabel>
           <Select
@@ -288,92 +172,45 @@ const LogTable = () => {
             <MenuItem value="">
               <em>ทั้งหมด</em>
             </MenuItem>
-            {allRoles.map((role) => (
-              <MenuItem key={role} value={role}>
-                {role}
-              </MenuItem>
+            {allRoles.map((r) => (
+              <MenuItem key={r} value={r}>{r}</MenuItem>
             ))}
           </Select>
         </FormControl>
       </Box>
 
-      {/* ส่วนตาราง (Table Section) */}
-      <TableContainer
-        component={Box}
-        sx={{
-          backgroundColor: "white",
-          borderRadius: "12px",
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-        }}
-      >
+      {/* Table */}
+      <TableContainer component={Box} sx={{ backgroundColor: "white", borderRadius: "12px", boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)" }}>
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell
-                sx={{
-                  backgroundColor: "#3f51b5",
-                  color: "#fff",
-                  fontWeight: "bold",
-                }}
-              >
-                Name
-              </TableCell>
-              <TableCell
-                sx={{
-                  backgroundColor: "#3f51b5",
-                  color: "#fff",
-                  fontWeight: "bold",
-                }}
-              >
-                Email
-              </TableCell>
-              <TableCell
-                sx={{
-                  backgroundColor: "#3f51b5",
-                  color: "#fff",
-                  fontWeight: "bold",
-                }}
-              >
-                Role
-              </TableCell>
-              <TableCell
-                sx={{
-                  backgroundColor: "#3f51b5",
-                  color: "#fff",
-                  fontWeight: "bold",
-                }}
-              >
-                Action
-              </TableCell>
-              <TableCell
-                sx={{
-                  backgroundColor: "#3f51b5",
-                  color: "#fff",
-                  fontWeight: "bold",
-                }}
-              >
-                Time
-              </TableCell>
+              {["Name","Email","Role","Action","Time"].map((h) => (
+                <TableCell key={h} sx={{ backgroundColor: "#3f51b5", color: "#fff", fontWeight: "bold" }}>
+                  {h}
+                </TableCell>
+              ))}
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredData.map((row, index) => (
-              <TableRow key={index}>
-                <TableCell>{row.name}</TableCell>
-                <TableCell>
-                  {row.email === "LnwzqbBoss@gmail.com" ? (
-                    <Link href="#" underline="always">
-                      {row.email}
-                    </Link>
-                  ) : (
-                    row.email
-                  )}
-                </TableCell>
-                <TableCell>{row.role}</TableCell>
-                <TableCell>{row.action}</TableCell>
-                <TableCell>{row.time}</TableCell>
-              </TableRow>
-            ))}
+            {loading ? (
+              <TableRow><TableCell colSpan={5} align="center">Loading…</TableCell></TableRow>
+            ) : filtered.length === 0 ? (
+              <TableRow><TableCell colSpan={5} align="center">No logs found.</TableCell></TableRow>
+            ) : (
+              filtered.map((row, idx) => (
+                <TableRow key={idx}>
+                  <TableCell>{row.name}</TableCell>
+                  <TableCell>
+                    {row.email === "LnwzqbBoss@gmail.com" ? (
+                      <Link href="#" underline="always">{row.email}</Link>
+                    ) : row.email}
+                  </TableCell>
+                  <TableCell>{row.role}</TableCell>
+                  <TableCell>{row.action}</TableCell>
+                  <TableCell>{fmt(row.timeISO)}</TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </TableContainer>
