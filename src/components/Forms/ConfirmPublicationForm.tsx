@@ -1,6 +1,7 @@
+// components/Forms/ConfirmPublicationForm.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Box, Paper, Typography, IconButton, Button, Select, MenuItem,
   FormControl, InputLabel, Link as MUILink, Alert
@@ -24,6 +25,7 @@ export default function ConfirmPublicationForm() {
   const [authors, setAuthors] = useState<string[]>([]);
   const [description, setDescription] = useState("");
   const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const [ownerEmail, setOwnerEmail] = useState<string | null>(null); // 👈
 
   useEffect(() => {
     (async () => {
@@ -42,6 +44,7 @@ export default function ConfirmPublicationForm() {
         setDescription(j.description ?? "");
         setStatus((j.status as Status) ?? "Pending");
         setFileUrl(j.fileUrl ?? null);
+        setOwnerEmail(j.ownerEmail ?? null); // 👈
       } catch (e: any) {
         setErrorText(e?.message ?? "Failed to load publication");
       } finally {
@@ -56,18 +59,54 @@ export default function ConfirmPublicationForm() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ status }), // "Public" | "Pending" | "Waiting for Edit"
+        body: JSON.stringify({ status }),
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
         throw new Error(j?.error ?? "Update failed");
       }
-      // go back to manage list (or wherever you want)
       router.push("/review_publication");
     } catch (e: any) {
       setErrorText(e?.message ?? "Update failed");
     }
   };
+
+  // Build mailto link (only if we have ownerEmail)
+  const mailtoHref = useMemo(() => {
+    if (!ownerEmail) return null;
+    const subject = encodeURIComponent(`Regarding your publication: ${title || ""}`);
+    const lines = [
+      `Hello,`,
+      ``,
+      `We are reviewing your submission${title ? `: "${title}"` : ""}.`,
+      `Status: ${status}`,
+      ``,
+      `Please reply if any changes are required.`,
+      ``,
+      `Open details: ${typeof window !== "undefined" ? window.location.origin + `/confirm/${id}` : ""}`,
+    ];
+    const body = encodeURIComponent(lines.join("\n"));
+    return `mailto:${ownerEmail}?subject=${subject}&body=${body}`;
+  }, [ownerEmail, title, status, id]);
+
+  // inside your component (after you have `ownerEmail`, `title`, `status`)
+  const handleEmailGmail = () => {
+    if (!ownerEmail) return;
+    const subject = `Regarding your publication: ${title}`;
+    const body =
+      `Hello,\n\n` +
+      `We are reviewing your submission: "${title}".\n` +
+      `Status: ${status}\n\n`
+
+    const gmailUrl =
+      `https://mail.google.com/mail/?view=cm&fs=1` +
+      `&to=${encodeURIComponent(ownerEmail)}` +
+      `&su=${encodeURIComponent(subject)}` +
+      `&body=${encodeURIComponent(body)}`;
+
+    window.open(gmailUrl, "_blank", "noopener,noreferrer");
+  };
+
 
   return (
     <Box sx={{ p: 4, bgcolor: "#dce6f7", minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center" }}>
@@ -124,9 +163,16 @@ export default function ConfirmPublicationForm() {
                 </FormControl>
 
                 <Box>
-                  <Button variant="contained" sx={{ mr: 1, bgcolor: "#f56565" }} startIcon={<EmailIcon />}>
+                  <Button
+                    variant="contained"
+                    sx={{ mr: 1, bgcolor: "#f56565" }}
+                    startIcon={<EmailIcon />}
+                    onClick={handleEmailGmail}
+                    disabled={!ownerEmail}
+                  >
                     Email
                   </Button>
+
                   <Button variant="contained" sx={{ bgcolor: "#2c5282" }} onClick={handleSubmit}>
                     Submit
                   </Button>
@@ -139,4 +185,5 @@ export default function ConfirmPublicationForm() {
     </Box>
   );
 }
+
 

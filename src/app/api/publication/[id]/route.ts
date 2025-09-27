@@ -41,6 +41,9 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
       )
       .filter(Boolean) as string[];
 
+  const ownerParticipation = pub.participations.find((p) => p.part_status === 0 && p.user);
+  const ownerEmail = ownerParticipation?.user?.user_email ?? null;
+
   const firstFile = pub.files[0] ?? null;
 
   return NextResponse.json({
@@ -51,6 +54,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     type: pub.pub_type,
     status: STATUS_LABEL[pub.pub_status as 0 | 1 | 2] ?? "Pending",
     authors,
+    ownerEmail,
     fileUrl: firstFile?.file_url ?? null,
   });
 }
@@ -218,7 +222,7 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
     if (!f.file_url) continue;
     // file_url like /uploads/xxx.pdf
     const fullPath = path.join(process.cwd(), "public", f.file_url.replace(/^\//, ""));
-    try { await fs.unlink(fullPath); } catch {}
+    try { await fs.unlink(fullPath); } catch { }
   }
 
   return NextResponse.json({ ok: true });
