@@ -64,14 +64,14 @@ terraform apply -auto-approve -var-file="terraform.tfvars"
 echo "✅ Terraform apply complete. Fetching outputs..."
 
 # Capture Terraform outputs into variables
-ECR_REPO_URL=$(terraform output -raw ecr_repository_url)
-CLUSTER_NAME=$(terraform output -raw ecs_cluster_name)
-SERVICE_NAME=$(terraform output -raw ecs_service_name)
-TASK_DEFINITION_ARN=$(terraform output -raw ecs_task_definition_arn)
-SUBNET_IDS_STRING=$(terraform output -json public_subnet_ids | jq -r 'join(",")')
-SECURITY_GROUP_ID=$(terraform output -raw ecs_tasks_security_group_id)
-CONTAINER_NAME=$(terraform output -raw ecs_container_name)
-PROJECT_NAME=$(terraform output -raw project_name)
+ECR_REPO_URL=$(terraform output -raw ecr_repository_url | tr -d '\r')
+CLUSTER_NAME=$(terraform output -raw ecs_cluster_name | tr -d '\r')
+SERVICE_NAME=$(terraform output -raw ecs_service_name | tr -d '\r')
+TASK_DEFINITION_ARN=$(terraform output -raw ecs_task_definition_arn | tr -d '\r')
+SUBNET_IDS_STRING=$(terraform output -json public_subnet_ids | jq -r 'join(",")' | tr -d '\r')
+SECURITY_GROUP_ID=$(terraform output -raw ecs_tasks_security_group_id | tr -d '\r')
+CONTAINER_NAME=$(terraform output -raw ecs_container_name | tr -d '\r')
+PROJECT_NAME=$(terraform output -raw project_name | tr -d '\r')
 
 cd ..
 echo "   - ECR Repository: $ECR_REPO_URL"
