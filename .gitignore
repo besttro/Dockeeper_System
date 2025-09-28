@@ -49,3 +49,9 @@ next-env.d.ts
 
 # Prisma migrations
 /prisma/migrations/
+
+# Terraform files
+*.tfstate
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
