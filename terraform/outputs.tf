@@ -33,3 +33,13 @@ output "ecs_tasks_security_group_id" {
   description = "ID ของ Security Group สำหรับ ECS Tasks"
   value       = aws_security_group.ecs_tasks.id
 }
+
+output "ecs_container_name" {
+  description = "ชื่อของ Container หลักที่อยู่ใน Task Definition"
+  value       = "${var.project_name}-container"
+}
+
+output "project_name" {
+  description = "ชื่อโปรเจกต์ที่ใช้ในการสร้างทรัพยากรต่างๆ"
+  value       = var.project_name
+}
