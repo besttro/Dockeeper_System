@@ -1,3 +1,5 @@
+// src/app/api/publication/[id]/route.ts
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/auth";
@@ -20,7 +22,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
 
   const authors =
     pub.participations
-      .map((p) =>
+      .map((p: any) =>
         p.user?.member
           ? `${p.user.member.mem_fname ?? ""} ${p.user.member.mem_lname ?? ""}`.trim()
           : p.co_name ?? null

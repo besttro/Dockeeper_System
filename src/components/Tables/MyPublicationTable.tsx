@@ -1,3 +1,4 @@
+// src/components/Tables/MyPublicationTable.tsx
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";

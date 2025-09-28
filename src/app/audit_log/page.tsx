@@ -1,6 +1,6 @@
-"use client";
+// src/app/audit_log/page.tsx
 
-import { Box, Button, Typography, Divider, Link } from "@mui/material";
+import { Box } from "@mui/material";
 import Navbar from "../../components/Navigator/Navbar";
 import LogTable from "@/components/Tables/LogTable";
 

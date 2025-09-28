@@ -1,6 +1,7 @@
-// app/api/publication/route.ts
+// src/app/api/publication/route.ts
+
 import { NextResponse } from "next/server";
-import path from "node:path";
+// import path from "node:path";
 // import fs from "node:fs/promises";
 import crypto from "node:crypto";
 import { prisma } from "@/lib/prisma";
@@ -30,11 +31,11 @@ export async function GET() {
       1: "international",
     };
 
-    const result = publications.map((pub) => {
+    const result = publications.map((pub: any) => {
       const authors =
         pub.participations
-          ?.map((p) => p.user?.user_email)
-          .filter((e): e is string => Boolean(e)) ?? [];
+          ?.map((p: any) => p.user?.user_email)
+          .filter((e: any): e is string => Boolean(e)) ?? [];
 
       const desc = pub.pub_description ?? "";
       const summary =
@@ -67,6 +68,7 @@ export async function POST(req: Request) {
   if (!uid)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  // --- 1. สร้าง S3 Client ---
   const s3Client = new S3Client({
     region: process.env.AWS_REGION!,
     credentials: {
@@ -133,10 +135,9 @@ export async function POST(req: Request) {
 
     // 2. สร้าง path และชื่อไฟล์ใหม่: user_id/sanitized-title-year.pdf
     const fileName = `${uid}/${sanitizedTitle}-${pub_year}.pdf`;
-
     const uploadParams = {
       Bucket: process.env.S3_BUCKET_NAME!,
-      Key: fileName,
+      Key: fileName, // <-- ใช้ fileName ที่สร้างขึ้นใหม่
       Body: buf,
       ContentType: file.type,
     };
@@ -152,7 +153,7 @@ export async function POST(req: Request) {
     // await fs.writeFile(filePath, buf);
     // const fileUrl = `/uploads/${fileName}`;
 
-    const created = await prisma.$transaction(async (tx) => {
+    const created = await prisma.$transaction(async (tx: any) => {
       // 1) Publication
       const publication = await tx.publication.create({
         data: {

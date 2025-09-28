@@ -1,4 +1,4 @@
-// components/Forms/AddPublicationForm.tsx
+// src/components/Forms/AddPublicationForm.tsx
 "use client";
 
 import { useState } from "react";
@@ -162,7 +162,7 @@ export default function AddPublicationForm({ currentUserId }: { currentUserId?: 
           <Typography sx={{ minWidth: 160, color: "text.primary" }}>File to Upload</Typography>
           <Button variant="outlined" component="label" startIcon={<FileUploadIcon />}>
             Add file
-            <Input type="file" accept="application/pdf" onChange={handleFileChange} sx={{ display: "none" }} />
+            <Input type="file" inputProps={{ accept: "application/pdf" }} onChange={handleFileChange} sx={{ display: "none" }} />
           </Button>
           {file && <Typography variant="body2" sx={{ ml: 2 }}>{file.name}</Typography>}
         </Box>

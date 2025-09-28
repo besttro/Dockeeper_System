@@ -1,11 +1,10 @@
-"use client";
+// src/app/add_user/page.tsx
 
-import { useState } from "react";
-import { Box, Button, Typography, Divider, Link } from "@mui/material";
+import { Box } from "@mui/material";
 import Navbar from "../../components/Navigator/Navbar";
 import AddUserForm from "@/components/Forms/AddUserForm";
 
-export default function ProfilePage() {
+export default function AddUserPage() {
 
   return (
     <Box>
