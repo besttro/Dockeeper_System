@@ -1,82 +1,45 @@
-version: '3.8'
-
 services:
   # Service สำหรับฐานข้อมูล PostgreSQL
   db:
     image: postgres:15-alpine
-    container_name: YOUR_CONTAINER_NAME
+    container_name: postgres-db
     restart: always
     environment:
-      POSTGRES_USER: YOUR_POSTGRES_USER
-      POSTGRES_PASSWORD: YOUR_POSTGRES_PASSWORD
-      POSTGRES_DB: YOUR_POSTGRES_DB
+      # อ่านค่าจากไฟล์ .env โดยอัตโนมัติ
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5432:5432"
+      - "5435:5432" # เปลี่ยน port บนเครื่องเป็น 5435 เพื่อไม่ให้ชนกับ postgres อื่น
     volumes:
       - postgres_data_local:/var/lib/postgresql/data
 
-  # Service สำหรับ S3 จำลอง (MinIO)
-  minio:
-    image: minio/minio:latest
-    container_name: YOUR_CONTAINER_NAME
-    ports:
-      # API port
-      - "9000:9000"
-      # Console/UI port
-      - "9001:9001"
-    environment:
-      # ตั้งค่า user/password สำหรับ MinIO
-      MINIO_ROOT_USER: YOUR_MINIO_ROOT_USER
-      MINIO_ROOT_PASSWORD: YOUR_MINIO_ROOT_PASSWORD
-    volumes:
-      - minio_data_local:/data
-    command: server /data --console-address ":9001"
-
-  # Service สำหรับสร้าง Bucket ใน MinIO โดยอัตโนมัติ
-  createbuckets:
-    image: minio/mc
-    depends_on:
-      - minio
-    entrypoint: >
-      sh -c " /usr/bin/mc config host add myminio http://minio:9000 YOUR_MINIO_ROOT_USER YOUR_MINIO_ROOT_PASSWORD; 
-      /usr/bin/mc mb myminio/my-local-bucket; 
-      /usr/bin/mc policy set public myminio/my-local-bucket; 
-      echo 'Bucket created successfully.'; 
-      "
-
   # Service สำหรับแอปพลิเคชัน
   app:
-    build: .
-    container_name: my_project_app_local
+    build:
+      context: .
+      target: production
+    container_name: dockeeper-app
     restart: always
     depends_on:
       - db
-      - minio # ให้แอปเรารอ MinIO พร้อมทำงานก่อน
     ports:
       - "3000:3000"
-    environment:
-      # --- Database Config ---
-      DATABASE_URL: "postgresql://user:password@db:5432/myappdb?schema=public"
-      PORT: 3000
-      # --- S3/File Storage Config ---
-      S3_ENDPOINT: "http://minio:9000"
-      S3_ACCESS_KEY: "minioadmin"
-      S3_SECRET_KEY: "minioadmin"
-      S3_BUCKET_NAME: "my-local-bucket"
-      S3_REGION: "us-east-1" # Region ไม่มีผลกับ MinIO แต่ใส่ไว้ให้เหมือน production
-      S3_FORCE_PATH_STYLE: "true" # ***สำคัญมาก*** สำหรับการเชื่อมต่อกับ MinIO
+    env_file:
+      - .env # บอกให้ service นี้อ่านค่าจากไฟล์ .env
+    # ลบ volumes ส่วนนี้ออกทั้งหมด เพราะไม่จำเป็นสำหรับโหมด production
+    # volumes:
+    #   - .:/app
+    #   - /app/node_modules
     command: >
       sh -c "
-        echo 'Waiting for services...' &&
-        sleep 5 &&
-        echo 'Running database migrations...' &&
+        echo 'Running Prisma migrations for local startup...' &&
         npx prisma migrate deploy &&
-        echo 'Seeding data with tsx...' &&
-        npx tsx prisma/seed.ts &&
-        echo 'Starting application...' &&
-        npm start
+        echo 'Seeding database for local startup...' &&
+        npx prisma db seed &&
+        echo 'Starting Next.js server...' &&
+        npm run start
       "
 
 volumes:
   postgres_data_local:
-  minio_data_local:

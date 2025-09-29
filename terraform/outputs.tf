@@ -48,3 +48,18 @@ output "s3_bucket_name" {
   description = "ชื่อของ S3 Bucket ที่สร้างขึ้นสำหรับเก็บไฟล์"
   value       = aws_s3_bucket.main.id
 }
+
+output "rds_endpoint" {
+  description = "RDS instance endpoint"
+  value       = aws_db_instance.main.address
+}
+
+output "rds_port" {
+  description = "RDS instance port"
+  value       = aws_db_instance.main.port
+}
+
+output "database_name" {
+  description = "Database name"
+  value       = local.sanitized_db_name
+}

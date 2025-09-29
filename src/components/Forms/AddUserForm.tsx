@@ -36,7 +36,8 @@ export default function AddUserForm() {
   const [errText, setErrText] = useState<string | null>(null);
 
   const validate = () => {
-    if (!fname.trim() || !lname.trim()) return "First and last name are required.";
+    if (!fname.trim() || !lname.trim())
+      return "First and last name are required.";
     if (!email.trim()) return "Email is required.";
     if (!/^\S+@\S+\.\S+$/.test(email)) return "Email looks invalid.";
     if (!password) return "Password is required.";
@@ -44,7 +45,8 @@ export default function AddUserForm() {
 
     // phone: allow empty OR Thai digits (no leading +66 needed in DB, optional here)
     const p = phone.trim();
-    if (p && !/^\+?\d{6,15}$/.test(p)) return "Phone looks invalid. Use digits, optional +, 6–15 chars.";
+    if (p && !/^\+?\d{6,15}$/.test(p))
+      return "Phone looks invalid. Use digits, optional +, 6–15 chars.";
     return null;
   };
 
@@ -78,8 +80,13 @@ export default function AddUserForm() {
       if (!res.ok) throw new Error(data?.error ?? "Failed to create user");
 
       setOkText("User created successfully.");
-      setFname(""); setLname(""); setEmail(""); setPhone("");
-      setPassword(""); setConfirm(""); setRole("Officer");
+      setFname("");
+      setLname("");
+      setEmail("");
+      setPhone("");
+      setPassword("");
+      setConfirm("");
+      setRole("Officer");
     } catch (e: any) {
       setErrText(e?.message ?? "Failed to create user");
     } finally {
@@ -88,29 +95,51 @@ export default function AddUserForm() {
   };
 
   return (
-    <Paper elevation={0} sx={{ p: 4, borderRadius: 3, maxWidth: 800, mx: "auto" }}>
+    <Paper
+      elevation={0}
+      sx={{ p: 4, borderRadius: 3, maxWidth: 800, mx: "auto" }}
+    >
       <Typography variant="h5" fontWeight="bold" mb={3}>
         Add New User
       </Typography>
 
-      {errText && <Alert severity="error" sx={{ mb: 2 }}>{errText}</Alert>}
-      {okText && <Alert severity="success" sx={{ mb: 2 }}>{okText}</Alert>}
+      {errText && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {errText}
+        </Alert>
+      )}
+      {okText && (
+        <Alert severity="success" sx={{ mb: 2 }}>
+          {okText}
+        </Alert>
+      )}
 
       <Box display="flex" gap={2} flexDirection="column">
         <Box display="flex" flexDirection="row" gap={2}>
           <TextField
-            required label="First Name" fullWidth
-            value={fname} onChange={(e) => setFname(e.target.value)}
+            required
+            label="First Name"
+            fullWidth
+            value={fname}
+            onChange={(e) => setFname(e.target.value)}
           />
           <TextField
-            required label="Last Name" fullWidth
-            value={lname} onChange={(e) => setLname(e.target.value)}
+            required
+            label="Last Name"
+            fullWidth
+            value={lname}
+            onChange={(e) => setLname(e.target.value)}
           />
         </Box>
 
         <TextField
-          required id="email" type="email" label="Email Address" fullWidth
-          value={email} onChange={(e) => setEmail(e.target.value)}
+          required
+          id="email"
+          type="email"
+          label="Email Address"
+          fullWidth
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -137,13 +166,16 @@ export default function AddUserForm() {
 
         <Box display="flex" flexDirection="row" gap={2}>
           <TextField
-            required label="Password" fullWidth
+            required
+            label="Password"
+            fullWidth
             type={showPassword ? "text" : "password"}
-            value={password} onChange={(e) => setPassword(e.target.value)}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
-                  <IconButton onClick={() => setShowPassword(s => !s)}>
+                  <IconButton onClick={() => setShowPassword((s) => !s)}>
                     {showPassword ? <VisibilityOff /> : <Visibility />}
                   </IconButton>
                 </InputAdornment>
@@ -151,13 +183,16 @@ export default function AddUserForm() {
             }}
           />
           <TextField
-            required label="Confirm Password" fullWidth
+            required
+            label="Confirm Password"
+            fullWidth
             type={showConfirmPassword ? "text" : "password"}
-            value={confirm} onChange={(e) => setConfirm(e.target.value)}
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
-                  <IconButton onClick={() => setShowConfirmPassword(s => !s)}>
+                  <IconButton onClick={() => setShowConfirmPassword((s) => !s)}>
                     {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
                   </IconButton>
                 </InputAdornment>
@@ -169,8 +204,11 @@ export default function AddUserForm() {
         <FormControl fullWidth required>
           <InputLabel id="role-label">Role</InputLabel>
           <Select
-            labelId="role-label" id="role-select"
-            value={role} label="Role" onChange={(e) => setRole(e.target.value as "Officer" | "Professor")}
+            labelId="role-label"
+            id="role-select"
+            value={role}
+            label="Role"
+            onChange={(e) => setRole(e.target.value as "Officer" | "Professor")}
           >
             <MenuItem value="Officer">Staff</MenuItem>
             <MenuItem value="Professor">Professor</MenuItem>
@@ -191,5 +229,3 @@ export default function AddUserForm() {
     </Paper>
   );
 }
-
-

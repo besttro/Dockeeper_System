@@ -1,58 +1,73 @@
-# Stage 1: Build
-FROM node:20-alpine AS build
+# === STAGE 1: BASE ===
+# Stage นี้จะติดตั้ง dependencies ทั้งหมดที่จำเป็นสำหรับทั้ง dev และ prod
+FROM node:20-alpine AS base
 WORKDIR /app
 
-# ❗️ เพิ่มส่วนนี้เข้ามา เพื่อให้ prisma generate ทำงานได้
+# Copy package files
+COPY package*.json ./
+# ติดตั้ง dependencies ทั้งหมด (รวม devDependencies)
+RUN npm ci
+
+
+# === STAGE 2: DEVELOPMENT ===
+# Stage นี้จะถูกใช้สำหรับ Local Development เท่านั้น (โดย docker-compose)
+FROM base AS development
+WORKDIR /app
+COPY . .
+# คำสั่งเริ่มต้นสำหรับ development (เปิด Hot-Reloading)
+CMD ["npm", "run", "dev"]
+
+
+# === STAGE 3: PRODUCTION BUILD ===
+# Stage นี้จะทำหน้าที่ Build แอปพลิเคชันสำหรับ Production
+FROM base AS production_build
+WORKDIR /app
+
 # เราจะส่งค่า dummy เข้ามาตอน build
 ARG DATABASE_URL="postgresql://user:password@host:port/db?schema=public"
 ENV DATABASE_URL=$DATABASE_URL
 
-# Copy package files
-COPY package*.json ./
-
-# ติดตั้ง dependencies ทั้งหมด
-RUN npm ci
-
-# Copy โค้ดทั้งหมด
+# Copy โค้ดที่เหลือทั้งหมด
 COPY . .
 
 # ให้สิทธิ์รัน entrypoint.sh ได้
 RUN chmod +x ./automations/Docker/entrypoint.sh
 
 # Generate Prisma client
-# คำสั่งนี้จะใช้ DATABASE_URL ที่เราตั้งไว้ข้างบน
 RUN npx prisma generate
 
 # Build Next.js
 RUN npm run build
 
-# Stage 2: Production
+
+# === STAGE 4: FINAL PRODUCTION IMAGE ===
+# เราจะสร้าง Image สุดท้ายที่เล็กที่สุดและปลอดภัยที่สุดจาก alpine
 FROM node:20-alpine AS production
 WORKDIR /app
-
-# Production environment
 ENV NODE_ENV=production
 
-# Copy built app จาก build stage
-COPY --from=build /app/.next ./.next
-COPY --from=build /app/public ./public
-COPY --from=build /app/package.json ./package.json
-COPY --from=build /app/package-lock.json ./package-lock.json
+# Copy เฉพาะสิ่งที่จำเป็นจาก production_build stage
+# --chown=node:node จะเปลี่ยนเจ้าของไฟล์เป็น user 'node' ที่เราเพิ่งสร้าง
+COPY --from=production_build --chown=node:node /app/node_modules ./node_modules
+COPY --from=production_build --chown=node:node /app/.next ./.next
+COPY --from=production_build --chown=node:node /app/public ./public
+COPY --from=production_build --chown=node:node /app/package.json ./package.json
+COPY --from=production_build --chown=node:node /app/prisma ./prisma
+# COPY --from=production_build --chown=node:node /app/automations/Docker/entrypoint.sh .
 
-# Copy prisma schema และ entrypoint script เข้ามาด้วย
-COPY --from=build /app/prisma ./prisma
-COPY --from=build /app/automations/Docker/entrypoint.sh .
+# ลบ devDependencies ที่ไม่จำเป็นสำหรับ production
+# วิธีนี้เร็วกว่าการรัน `npm ci --omit=dev` ใหม่ทั้งหมด
+RUN npm prune --production
 
-# ติดตั้งเฉพาะ production dependencies
-RUN npm ci --omit=dev --frozen-lockfile
+# เปลี่ยนไปใช้ user 'node'
+USER node
 
-# Expose port
 EXPOSE 3000
 
-# ENTRYPOINT จะทำงานก่อนเสมอ
-# มันจะรัน entrypoint.sh ของเรา
-ENTRYPOINT ["./entrypoint.sh"]
+# เพิ่ม Healthcheck เพื่อให้ ECS ตรวจสอบได้ว่าแอปพร้อมทำงานจริงๆ หรือไม่
+# มันจะลองเรียกไปที่ http://localhost:3000 ทุกๆ 30 วินาที
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD wget -q -O- http://localhost:3000 || exit 1
 
-# CMD จะกลายเป็นคำสั่งที่ถูกส่งต่อให้ entrypoint.sh (ตัว "$@" ใน script)
-# เพื่อให้ทำงานหลังจาก migrate เสร็จ
+# ENTRYPOINT ["./entrypoint.sh"]
 CMD ["npm", "run", "start"]

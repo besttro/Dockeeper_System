@@ -47,9 +47,6 @@ next-env.d.ts
 .idea/*
 *.swp
 
-# Prisma migrations
-/prisma/migrations/
-
 # Terraform files
 *.tfstate*
 .terraform/
