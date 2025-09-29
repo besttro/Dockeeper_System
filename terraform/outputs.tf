@@ -43,3 +43,8 @@ output "project_name" {
   description = "ชื่อโปรเจกต์ที่ใช้ในการสร้างทรัพยากรต่างๆ"
   value       = var.project_name
 }
+
+output "s3_bucket_name" {
+  description = "ชื่อของ S3 Bucket ที่สร้างขึ้นสำหรับเก็บไฟล์"
+  value       = aws_s3_bucket.main.id
+}
