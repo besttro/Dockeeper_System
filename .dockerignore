@@ -1,0 +1,26 @@
+# Ignore node_modules and local environment files
+# ไม่ต้อง copy node_modules เพราะเราจะรัน npm ci ข้างใน Docker เอง
+node_modules
+.env.local
+.env*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Ignore Next.js build cache and output from local machine
+# นี่คือตัวการที่ทำให้ build พังครั้งก่อน!
+.next
+
+# Ignore Terraform state and local variables
+# ป้องกันไม่ให้ข้อมูลลับของ Terraform หลุดเข้าไป
+terraform/.terraform
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/terraform.tfvars
+terraform/*.tfvars
+
+# Ignore Git directory and other common files
+.git
+.gitignore
+.dockerignore
+README.md

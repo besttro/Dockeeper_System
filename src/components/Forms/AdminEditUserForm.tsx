@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import {
   Box, Paper, Avatar, Typography, TextField, Button,
   IconButton, InputAdornment, Alert
@@ -21,7 +21,6 @@ type LoadedUser = {
 
 export default function AdminEditUserForm() {
   const params = useParams<{ id: string }>();
-  const router = useRouter();
   const userId = Number(params?.id);
 
   const [fname, setFname] = useState("");

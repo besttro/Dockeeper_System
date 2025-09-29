@@ -51,7 +51,7 @@ export async function GET(req: Request) {
     orderBy: [{ user_id: "asc" }],
   });
 
-  const result = users.map((u) => {
+  const result = users.map((u: any) => {
     const memType = u.member?.mem_type ?? 2;
     const roleLabel = memType === 2 ? "Professor" : memType === 1 ? "Officer" : "Admin";
     return {
@@ -72,10 +72,10 @@ export async function GET(req: Request) {
    - Stores password in plain text (per your configuration).
    - Creates Member then User; sets mem_type based on role.
 */
-const ROLE_TO_MEMTYPE: Record<string, 1 | 2> = {
-  Officer: 1,      // Staff
-  Professor: 2,
-};
+// const ROLE_TO_MEMTYPE: Record<string, 1 | 2> = {
+//   Officer: 1,      // Staff
+//   Professor: 2,
+// };
 
 export async function POST(req: Request) {
   const adminId = await getCurrentUserId();
@@ -104,7 +104,7 @@ export async function POST(req: Request) {
   const memType = role === "Professor" ? 2 : 1;
 
   try {
-    const created = await prisma.$transaction(async (tx) => {
+    const created = await prisma.$transaction(async (tx: any) => {
       const member = await tx.member.create({
         data: {
           mem_fname: fname,

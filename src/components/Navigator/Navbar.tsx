@@ -1,6 +1,8 @@
+// src/components/Navigator/Navbar.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import {
   Box, Typography, Button, Link as MUILink, Avatar,
   Menu, MenuItem, ListItemIcon
@@ -146,7 +148,7 @@ export default function Navbar() {
       {/* Left: Logo */}
       <MUILink href="/" sx={{ textDecoration: "none", color: "inherit" }}>
         <Box display="flex" flexDirection="row" alignItems="center" sx={{ cursor: "pointer" }}>
-          <img src="/psu_logo.png" alt="Logo" width={48} height={80} />
+          <Image src="/psu_logo.png" alt="Logo" width={48} height={80} />
           <Box display="flex" flexDirection="column" ml={2} lineHeight={1}>
             <Typography variant="h5" fontWeight="bold" color="primary.dark" sx={{ lineHeight: 1 }}>
               DOC

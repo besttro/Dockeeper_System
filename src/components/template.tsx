@@ -1,19 +1,20 @@
+// src/components/template.tsx
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import {
   Box,
   Button,
   Paper,
   TextField,
   Typography,
-  Divider,
   IconButton,
   Link,
 } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
 
-export default function HomePage() {
+export default function Template() {
   const [search, setSearch] = useState("");
 
   return (
@@ -30,7 +31,7 @@ export default function HomePage() {
       >
         {/* Logo + Title */}
         <Box display="flex" flexDirection="row" alignItems="center">
-          <img src="/psulogo.png" alt="Logo" width={60} height={60} />
+          <Image src="/psulogo.png" alt="Logo" width={60} height={60} />
           <Box display="flex" flexDirection="column">
             <Typography variant="h6" fontWeight="bold" color="primary.dark">
               DOC
