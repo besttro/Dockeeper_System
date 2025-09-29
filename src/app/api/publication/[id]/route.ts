@@ -1,10 +1,12 @@
-// app/api/publication/[id]/route.ts
+// src/app/api/publication/[id]/route.ts
+
 import { NextResponse } from "next/server";
-import path from "node:path";
-import fs from "node:fs/promises";
+// import path from "node:path";
+// import fs from "node:fs/promises";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/auth";
 import crypto from "node:crypto";
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 const STATUS_LABEL = { 0: "Pending", 1: "Public", 2: "Waiting for Edit" } as const;
 const STATUS_VALUE = { Pending: 0, Public: 1, "Waiting for Edit": 2 } as const;
@@ -34,14 +36,14 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
 
   const authors =
     pub.participations
-      .map((p) =>
+      .map((p: any) =>
         p.user?.member
           ? `${p.user.member.mem_fname ?? ""} ${p.user.member.mem_lname ?? ""}`.trim()
           : p.co_name ?? null
       )
       .filter(Boolean) as string[];
 
-  const ownerParticipation = pub.participations.find((p) => p.part_status === 0 && p.user);
+  const ownerParticipation = pub.participations.find((p: any) => p.part_status === 0 && p.user);
   const ownerEmail = ownerParticipation?.user?.user_email ?? null;
 
   const firstFile = pub.files[0] ?? null;
@@ -87,6 +89,10 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   // --------- CASE B: multipart/form-data → author edits ----------
   if (ctype.includes("multipart/form-data")) {
     // ensure owner
+    const s3Client = new S3Client({
+      region: process.env.AWS_REGION!,
+    });
+
     const owner = await prisma.participation.findFirst({
       where: { pub_id: id, user_id: uid, part_status: 0 },
       select: { part_id: true },
@@ -117,7 +123,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       }
     }
 
-    const updated = await prisma.$transaction(async (tx) => {
+    const updated = await prisma.$transaction(async (tx: any) => {
       // 1) update publication fields
       const publication = await tx.publication.update({
         where: { pub_id: id },
@@ -160,12 +166,30 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
         const ab = await file.arrayBuffer();
         const buf = Buffer.from(ab);
         const checksum = crypto.createHash("sha256").update(buf).digest("hex");
-        const uploadsDir = path.join(process.cwd(), "public", "uploads");
-        await fs.mkdir(uploadsDir, { recursive: true });
-        const fileName = `${checksum}.pdf`;
-        const filePath = path.join(uploadsDir, fileName);
-        await fs.writeFile(filePath, buf);
-        const fileUrl = `/uploads/${fileName}`;
+        
+        // สร้างชื่อไฟล์ที่สะอาดเหมือนใน POST route
+        const sanitizedTitle = pub_title
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, "")
+          .replace(/\s+/g, "-")
+          .slice(0, 50);
+
+        const fileName = `${uid}/${sanitizedTitle}-${pub_year}.pdf`;
+        
+        const uploadParams = {
+          Bucket: process.env.S3_BUCKET_NAME!,
+          Key: fileName,
+          Body: buf,
+          ContentType: file.type,
+        };
+
+        await s3Client.send(new PutObjectCommand(uploadParams));
+
+        const fileUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
+
+        // (Optional but recommended) ลบไฟล์เก่าออกจาก DB ก่อนเพิ่มไฟล์ใหม่
+        await tx.file.deleteMany({ where: { pub_id: id } });
 
         newFileRecord = await tx.file.create({
           data: {
@@ -180,6 +204,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
             kind: "PDF",
           },
         });
+        // --- END: แทนที่โค้ด fs ด้วย S3 ---
       }
 
       return publication;
@@ -205,13 +230,17 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
   });
   if (!owner) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
+  const s3Client = new S3Client({
+    region: process.env.AWS_REGION!,
+  });
+
   // collect files to remove from disk
   const files = await prisma.file.findMany({
     where: { pub_id: id },
     select: { file_url: true },
   });
 
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: any) => {
     await tx.file.deleteMany({ where: { pub_id: id } });
     await tx.participation.deleteMany({ where: { pub_id: id } });
     await tx.publication.delete({ where: { pub_id: id } });
@@ -221,12 +250,22 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
   for (const f of files) {
     if (!f.file_url) continue;
     // file_url like /uploads/xxx.pdf
-    const fullPath = path.join(process.cwd(), "public", f.file_url.replace(/^\//, ""));
-    try { await fs.unlink(fullPath); } catch { }
+    try {
+      // ดึง Key (path/to/file.pdf) ออกมาจาก URL เต็ม
+      const url = new URL(f.file_url);
+      const key = url.pathname.substring(1); // ลบ "/" ตัวแรกออก
+
+      const deleteParams = {
+        Bucket: process.env.S3_BUCKET_NAME!,
+        Key: key,
+      };
+      
+      await s3Client.send(new DeleteObjectCommand(deleteParams));
+
+    } catch (error) {
+      console.error(`Failed to delete file from S3: ${f.file_url}`, error);
+    }
   }
 
   return NextResponse.json({ ok: true });
 }
-
-
-

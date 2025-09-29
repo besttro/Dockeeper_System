@@ -1,5 +1,5 @@
-// app/(app)/add/page.tsx
-"use client";
+// src/app/add_publication/page.tsx
+
 import { Box } from "@mui/material";
 import Navbar from "../../components/Navigator/Navbar";
 import AddPublicationForm from "@/components/Forms/AddPublicationForm";

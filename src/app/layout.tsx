@@ -1,4 +1,5 @@
-// app/layout.tsx
+// src/app/layout.tsx
+
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
 import { CssBaseline } from '@mui/material';
 

@@ -1,4 +1,5 @@
 // app/api/profile/route.ts
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/auth";
@@ -40,7 +41,7 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: "First and last name are required." }, { status: 400 });
   }
 
-  const updated = await prisma.$transaction(async (tx) => {
+  const updated = await prisma.$transaction(async (tx: any) => {
     const user = await tx.user.findUnique({
       where: { user_id: uid },
       select: { user_id: true, mem_id: true },

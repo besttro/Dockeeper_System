@@ -1,11 +1,10 @@
-"use client";
+// src/app/edit_profile/page.tsx
 
-import { useState } from "react";
-import { Box, Button, Typography, Divider, Link } from "@mui/material";
+import { Box } from "@mui/material";
 import Navbar from "../../components/Navigator/Navbar";
 import EditProfileForm from "@/components/Forms/EditProfileForm";
 
-export default function ProfilePage() {
+export default function EditProfilePage() {
 
   return (
     <Box>

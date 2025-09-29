@@ -1,4 +1,4 @@
-// components/Forms/UpdatePublicationForm.tsx
+// src/components/Forms/UpdatePublicationForm.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -206,4 +206,3 @@ export default function UpdatePublicationForm({ pubId }: { pubId: number }) {
     </Box>
   );
 }
-
