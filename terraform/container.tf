@@ -56,7 +56,6 @@ resource "aws_iam_role_policy_attachment" "ecs_secrets_policy_attachment" {
   policy_arn = aws_iam_policy.ecs_secrets_policy.arn
 }
 
-# ❗️❗️❗️ START: เพิ่มสิทธิ์ S3 ❗️❗️❗️
 # สร้าง Policy ที่อนุญาตให้แอปเข้าถึง S3 Bucket ได้
 data "aws_iam_policy_document" "s3_access_policy_doc" {
   statement {
@@ -68,7 +67,7 @@ data "aws_iam_policy_document" "s3_access_policy_doc" {
       "s3:DeleteObject"
     ]
     # ระบุ Bucket ที่ต้องการให้เข้าถึง
-    resources = ["arn:aws:s3:::dockeeper-bucket/*"] # <-- ใช้ชื่อ Bucket ของคุณ
+    resources = ["${aws_s3_bucket.main.arn}/*"] # <-- ใช้ชื่อ Bucket ของคุณ
   }
 }
 
@@ -82,7 +81,6 @@ resource "aws_iam_role_policy_attachment" "s3_access_attachment" {
   role       = aws_iam_role.ecs_task_execution_role.name
   policy_arn = aws_iam_policy.s3_access_policy.arn
 }
-# ❗️❗️❗️ END: สิ้นสุดส่วน S3 ❗️❗️❗️
 
 # --- Application Load Balancer ---
 # สร้าง Load Balancer เพื่อรับ traffic จากภายนอก
@@ -148,13 +146,10 @@ resource "aws_ecs_task_definition" "app" {
         { name = "JWT_SECRET", valueFrom = "${aws_secretsmanager_secret.db_credentials.arn}:JWT_SECRET::" }
       ]
       # 2. เพิ่ม Environment Variables ที่ไม่ลับ
-      # ❗️❗️❗️ START: ส่วนที่แก้ไข ❗️❗️❗️
       environment = [
-        { name = "S3_BUCKET_NAME", value = "dockeeper-bucket" }, # <-- ใช้ชื่อ Bucket ของคุณ
-        # เปลี่ยนจากการ Hardcode "us-west-2" มาใช้ตัวแปรหลัก
+        { name = "S3_BUCKET_NAME", value = aws_s3_bucket.main.id },
         { name = "AWS_REGION", value = var.aws_region }
       ]
-      # ❗️❗️❗️ END: สิ้นสุดส่วนที่แก้ไข ❗️❗️❗️
     }
   ])
 }

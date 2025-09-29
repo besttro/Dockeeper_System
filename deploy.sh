@@ -35,7 +35,43 @@ else
     echo "✅ AWS CLI is configured."
 fi
 
-# 3. Check if Docker is running
+# 3. Check for Docker
+if ! command -v docker &> /dev/null; then
+    echo "❗️ Docker command could not be found. Attempting to install..."
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        # For Debian/Ubuntu
+        if command -v apt-get &> /dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y ca-certificates curl gnupg
+            sudo install -m 0755 -d /etc/apt/keyrings
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+            sudo chmod a+r /etc/apt/keyrings/docker.gpg
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+            sudo apt-get update
+            sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+        # For CentOS/RHEL
+        elif command -v yum &> /dev/null; then
+            sudo yum install -y yum-utils
+            sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+            sudo yum install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+        else
+            echo "❌ Could not determine package manager. Please install 'Docker' manually."; exit 1;
+        fi
+        echo "✅ Docker has been installed. You may need to add your user to the 'docker' group: sudo usermod -aG docker \$USER"
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        if ! command -v brew &> /dev/null; then echo "❌ Homebrew not installed. Cannot install Docker. Please install Docker Desktop manually."; exit 1; fi
+        echo "   On macOS, Docker Desktop is required. Installing via Homebrew..."
+        brew install --cask docker
+        echo "✅ Docker cask installed. Please LAUNCH Docker Desktop manually and run this script again."
+        exit 1
+    else
+        echo "❌ Unsupported OS. Please install 'Docker' manually."; exit 1
+    fi
+else
+    echo "✅ Docker command is available."
+fi
+
+# 3.5 Check if Docker Daemon is running
 if ! docker info > /dev/null 2>&1; then
     echo
     echo "❌ Docker is not running."
@@ -47,10 +83,30 @@ fi
 
 # 4. Check for Terraform
 if ! command -v terraform &> /dev/null; then
-    echo
-    echo "❌ Terraform command could not be found."
-    echo "   Please install Terraform by following the instructions at: https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli"
-    exit 1
+    echo "❗️ Terraform command could not be found. Attempting to install..."
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        # For Debian/Ubuntu
+        if command -v apt-get &> /dev/null; then
+            sudo apt-get update && sudo apt-get install -y gnupg software-properties-common
+            wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg
+            echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+            sudo apt-get update && sudo apt-get install -y terraform
+        # For CentOS/RHEL
+        elif command -v yum &> /dev/null; then
+            sudo yum install -y yum-utils
+            sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo
+            sudo yum -y install terraform
+        else
+             echo "❌ Could not determine package manager. Please install 'Terraform' manually."; exit 1;
+        fi
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        if ! command -v brew &> /dev/null; then echo "❌ Homebrew not installed. Cannot install Terraform. Please install it manually."; exit 1; fi
+        brew tap hashicorp/tap
+        brew install hashicorp/tap/terraform
+    else
+        echo "❌ Unsupported OS. Please install 'Terraform' manually."; exit 1
+    fi
+     echo "✅ Terraform has been installed."
 else
     echo "✅ Terraform is installed."
 fi
@@ -60,6 +116,13 @@ echo "✅ All required tools and configurations are in place."
 # --- Step 1: Provision Infrastructure with Terraform ---
 echo "🚀 Step 1: Applying Terraform configuration..."
 cd terraform
+
+echo "   - Initializing Terraform..."
+terraform init
+
+echo "   - Validating Terraform configuration..."
+terraform validate
+
 terraform apply -auto-approve -var-file="terraform.tfvars"
 echo "✅ Terraform apply complete. Fetching outputs..."
 

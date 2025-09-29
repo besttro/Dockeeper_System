@@ -68,14 +68,33 @@ export async function POST(req: Request) {
   if (!uid)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  // --- 1. สร้าง S3 Client ---
-  const s3Client = new S3Client({
+  // --- 1. การสร้าง S3 Client แบบไดนามิก ---
+  // ตรวจสอบว่าเราอยู่ในโหมด Local (มี S3_ENDPOINT) หรือไม่
+  const isDevelopment = !!process.env.S3_ENDPOINT;
+
+  // ตั้งค่าพื้นฐานสำหรับ S3 Client
+  const s3Config: {
+    region: string;
+    endpoint?: string;
+    forcePathStyle?: boolean;
+    credentials?: { accessKeyId: string; secretAccessKey: string; };
+  } = {
     region: process.env.AWS_REGION!,
-    credentials: {
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-    },
-  });
+  };
+
+  // ถ้าเป็น Local (MinIO) ให้กำหนดค่า endpoint และ credentials จาก .env
+  if (isDevelopment) {
+    s3Config.endpoint = process.env.S3_ENDPOINT!;
+    s3Config.forcePathStyle = true;
+    s3Config.credentials = {
+      accessKeyId: process.env.S3_ACCESS_KEY!,
+      secretAccessKey: process.env.S3_SECRET_KEY!,
+    };
+  }
+  // ถ้าเป็น Production บน AWS, SDK จะใช้ IAM Role ที่ผูกกับ ECS Task โดยอัตโนมัติ
+  // จึงไม่จำเป็นต้องใส่ credentials ในโค้ด
+
+  const s3Client = new S3Client(s3Config);
 
   try {
     const form = await req.formData();
@@ -145,7 +164,16 @@ export async function POST(req: Request) {
     await s3Client.send(new PutObjectCommand(uploadParams));
 
     // --- 4. สร้าง URL ของไฟล์บน S3 ---
-    const fileUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
+    let fileUrl: string;
+    if (isDevelopment) {
+      // สร้าง URL สำหรับ Local (MinIO)
+      // ผลลัพธ์: http://localhost:9000/my-local-bucket/path/to/file.pdf (เมื่อเข้าจากภายนอก)
+      fileUrl = `${process.env.S3_ENDPOINT!.replace('minio:9000', 'localhost:9000')}/${process.env.S3_BUCKET_NAME}/${fileName}`;
+    } else {
+      // สร้าง URL สำหรับ Production (AWS S3)
+      // ผลลัพธ์: https://bucket-name.s3.region.amazonaws.com/path/to/file.pdf
+      fileUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
+    }
     // const uploadsDir = path.join(process.cwd(), "public", "uploads");
     // await fs.mkdir(uploadsDir, { recursive: true });
     // const fileName = `${checksum}.pdf`;
