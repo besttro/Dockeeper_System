@@ -46,11 +46,6 @@ FROM node:20-alpine AS production
 WORKDIR /app
 ENV NODE_ENV=production
 
-# สร้าง non-root user ชื่อ 'node' และ group ชื่อ 'node'
-# เพื่อไม่ให้แอปของเรารันด้วยสิทธิ์ root ซึ่งเป็น Best Practice ด้านความปลอดภัย
-RUN addgroup -g 1001 -S node && \
-    adduser -S -u 1001 -G node node
-
 # Copy เฉพาะสิ่งที่จำเป็นจาก production_build stage
 # --chown=node:node จะเปลี่ยนเจ้าของไฟล์เป็น user 'node' ที่เราเพิ่งสร้าง
 COPY --from=production_build --chown=node:node /app/node_modules ./node_modules
@@ -58,7 +53,7 @@ COPY --from=production_build --chown=node:node /app/.next ./.next
 COPY --from=production_build --chown=node:node /app/public ./public
 COPY --from=production_build --chown=node:node /app/package.json ./package.json
 COPY --from=production_build --chown=node:node /app/prisma ./prisma
-COPY --from=production_build --chown=node:node /app/automations/Docker/entrypoint.sh .
+# COPY --from=production_build --chown=node:node /app/automations/Docker/entrypoint.sh .
 
 # ลบ devDependencies ที่ไม่จำเป็นสำหรับ production
 # วิธีนี้เร็วกว่าการรัน `npm ci --omit=dev` ใหม่ทั้งหมด
@@ -74,5 +69,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD wget -q -O- http://localhost:3000 || exit 1
 
-ENTRYPOINT ["./entrypoint.sh"]
+# ENTRYPOINT ["./entrypoint.sh"]
 CMD ["npm", "run", "start"]

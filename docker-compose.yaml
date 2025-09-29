@@ -10,63 +10,36 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5434:5432" # เปลี่ยน port บนเครื่องเป็น 5434 เพื่อไม่ให้ชนกับ postgres อื่น
+      - "5435:5432" # เปลี่ยน port บนเครื่องเป็น 5435 เพื่อไม่ให้ชนกับ postgres อื่น
     volumes:
       - postgres_data_local:/var/lib/postgresql/data
-
-  # Service สำหรับ S3 จำลอง (MinIO)
-  minio:
-    image: minio/minio:latest
-    container_name: minio-service
-    ports:
-      - "9000:9000" # API port
-      - "9001:9001" # Console/UI port
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-    volumes:
-      - minio_data_local:/data
-    command: server /data --console-address ":9001"
-
-  # Service สำหรับสร้าง Bucket ใน MinIO โดยอัตโนมัติ
-  createbuckets:
-    image: minio/mc
-    depends_on:
-      - minio
-    # เพิ่ม Retry loop เพื่อรอให้ MinIO พร้อมทำงาน
-    entrypoint: >
-      sh -c "
-        echo 'Waiting for MinIO...';
-        until /usr/bin/mc config host add myminio http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD}; do
-          echo '... MinIO is not ready, sleeping for 5 seconds ...';
-          sleep 5;
-        done;
-        echo 'MinIO is ready. Creating bucket...';
-        /usr/bin/mc mb myminio/${S3_BUCKET_NAME} --ignore-existing;
-        /usr/bin/mc policy set public myminio/${S3_BUCKET_NAME};
-        echo 'Bucket ${S3_BUCKET_NAME} created successfully.';
-      "
 
   # Service สำหรับแอปพลิเคชัน
   app:
     build:
       context: .
-      target: development # ❗️ บอกให้ใช้ 'development' stage สำหรับ Local
-    container_name: my_project_app_local
+      target: production
+    container_name: dockeeper-app
     restart: always
     depends_on:
       - db
-      - createbuckets # ให้แอปเรารอจนกว่า bucket จะถูกสร้างเสร็จ
     ports:
       - "3000:3000"
     env_file:
       - .env # บอกให้ service นี้อ่านค่าจากไฟล์ .env
-    # ❗️ เพิ่ม Volume mount เพื่อให้แก้โค้ดแล้วเห็นผลทันที (Hot-Reloading)
-    volumes:
-      - .:/app
-      # ป้องกันไม่ให้ node_modules ใน container ถูกเขียนทับโดยของในเครื่อง
-      - /app/node_modules
+    # ลบ volumes ส่วนนี้ออกทั้งหมด เพราะไม่จำเป็นสำหรับโหมด production
+    # volumes:
+    #   - .:/app
+    #   - /app/node_modules
+    command: >
+      sh -c "
+        echo 'Running Prisma migrations for local startup...' &&
+        npx prisma migrate deploy &&
+        echo 'Seeding database for local startup...' &&
+        npx prisma db seed &&
+        echo 'Starting Next.js server...' &&
+        npm run start
+      "
 
 volumes:
   postgres_data_local:
-  minio_data_local:
