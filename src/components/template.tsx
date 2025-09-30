@@ -13,7 +13,6 @@ import {
   Link,
 } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
-import Image from "next/image";
 
 export default function Template() {
   const [search, setSearch] = useState("");

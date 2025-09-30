@@ -25,3 +25,5 @@ export async function GET() {
     memType: user.member?.mem_type ?? null, // <-- IMPORTANT
   });
 }
+
+
