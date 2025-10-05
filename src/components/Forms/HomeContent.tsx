@@ -2,8 +2,18 @@
 
 import { useState, useEffect } from "react";
 import {
-  Box, Button, TextField, Typography, IconButton, Link, Avatar,
-  MenuItem, Select, FormControl, InputLabel, Drawer
+  Box,
+  Button,
+  TextField,
+  Typography,
+  IconButton,
+  Link,
+  Avatar,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+  Drawer,
 } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import CloseIcon from "@mui/icons-material/Close";
@@ -18,25 +28,38 @@ type Publication = {
   type: "journal" | "international" | "unknown";
 };
 
+type UserInfo = {
+  email: string;
+  memType: number; // 0=admin, 1=officer, 2=professor
+};
+
 export default function HomeContent() {
   const [search, setSearch] = useState("");
-  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  // const [userEmail, setUserEmail] = useState<string | null>(null);
   const [publications, setPublications] = useState<Publication[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filterAuthors, setFilterAuthors] = useState("");
   const [filterStartYear, setFilterStartYear] = useState("");
   const [filterEndYear, setFilterEndYear] = useState("");
-  const [filterPubType, setFilterPubType] = useState<"all" | Publication["type"]>("all");
+  const [filterPubType, setFilterPubType] = useState<
+    "all" | Publication["type"]
+  >("all");
 
   // session email from cookie-backed API
   useEffect(() => {
     (async () => {
       try {
         const res = await fetch("/api/me", { credentials: "include" });
-        const j = await res.json().catch(() => ({}));
-        setUserEmail(j?.loggedIn ? (j.email ?? null) : null);
+        const data = await res.json().catch(() => ({}));
+
+        if (data?.loggedIn && data.email && data.memType !== undefined) {
+          setUserInfo({ email: data.email, memType: data.memType });
+        } else {
+          setUserInfo(null);
+        }
       } catch {
-        setUserEmail(null);
+        setUserInfo(null);
       }
     })();
   }, []);
@@ -75,7 +98,9 @@ export default function HomeContent() {
     const startYear = filterStartYear ? parseInt(filterStartYear) : 0;
     const endYear = filterEndYear ? parseInt(filterEndYear) : 9999;
 
-    const authorsMatch = pub.authors.toLowerCase().includes(filterAuthors.toLowerCase());
+    const authorsMatch = pub.authors
+      .toLowerCase()
+      .includes(filterAuthors.toLowerCase());
     const yearMatch = pubYear >= startYear && pubYear <= endYear;
 
     // If UI filters to a specific type, only match records with a known type.
@@ -92,18 +117,54 @@ export default function HomeContent() {
     return authorsMatch && yearMatch && typeMatch && searchMatch;
   });
 
-
-  const publicationTypes: Array<{ value: "all" | Publication["type"]; label: string }> = [
+  const publicationTypes: Array<{
+    value: "all" | Publication["type"];
+    label: string;
+  }> = [
     { value: "all", label: "All Types" },
     { value: "journal", label: "Journal" },
     { value: "international", label: "International" },
   ];
 
+  let userManualHref = "#";
+  const s3BaseUrl = process.env.NEXT_PUBLIC_S3_MANUALS_BASE_URL;
+
+  if (userInfo && s3BaseUrl) {
+    switch (userInfo.memType) {
+      case 0: // admin
+        userManualHref = `${s3BaseUrl}/admin_manual.pdf`;
+        break;
+      case 1: // officer
+        userManualHref = `${s3BaseUrl}/officer_manual.pdf`;
+        break;
+      case 2: // professor
+        userManualHref = `${s3BaseUrl}/professor_manual.pdf`;
+        break;
+      default:
+        userManualHref = "#"; // สำหรับ role อื่นๆ ที่ไม่มี manual
+    }
+  }
+
   const filterContent = (
-    <Box sx={{ width: 300, p: 3, display: "flex", flexDirection: "column", gap: 2 }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+    <Box
+      sx={{
+        width: 300,
+        p: 3,
+        display: "flex",
+        flexDirection: "column",
+        gap: 2,
+      }}
+    >
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={2}
+      >
         <Typography variant="h6">Filter Options</Typography>
-        <IconButton onClick={handleFilterToggle}><CloseIcon /></IconButton>
+        <IconButton onClick={handleFilterToggle}>
+          <CloseIcon />
+        </IconButton>
       </Box>
 
       <TextField
@@ -157,17 +218,24 @@ export default function HomeContent() {
       <Box flex={1} p={4} position="relative">
         {/* Top Bar */}
         <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Link href="#" underline="hover" color="primary.dark" fontSize={14}>
+          <Link
+            href={userManualHref}
+            underline="hover"
+            color="primary.dark"
+            fontSize={14}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             User Manual
           </Link>
-          {userEmail ? (
+          {userInfo ? (
             <Box display="flex" alignItems="center" gap={2}>
               <Typography variant="body1" color="primary.dark">
-                {userEmail}
+                {userInfo.email}
               </Typography>
               <IconButton href="/profile">
                 <Avatar sx={{ bgcolor: "#7b9de0" }}>
-                  {userEmail[0]?.toUpperCase() ?? "U"}
+                  {userInfo.email[0]?.toUpperCase() ?? "U"}
                 </Avatar>
               </IconButton>
             </Box>
@@ -198,7 +266,13 @@ export default function HomeContent() {
           >
             Search
           </Button>
-          <Box display="flex" alignItems="center" gap={0.5} sx={{ cursor: "pointer" }} onClick={handleFilterToggle}>
+          <Box
+            display="flex"
+            alignItems="center"
+            gap={0.5}
+            sx={{ cursor: "pointer" }}
+            onClick={handleFilterToggle}
+          >
             <IconButton size="small">
               <FilterListIcon fontSize="small" />
             </IconButton>
@@ -243,7 +317,12 @@ export default function HomeContent() {
       </Box>
 
       {/* Filter Drawer */}
-      <Drawer anchor="right" open={isFilterOpen} onClose={handleFilterToggle} variant="temporary">
+      <Drawer
+        anchor="right"
+        open={isFilterOpen}
+        onClose={handleFilterToggle}
+        variant="temporary"
+      >
         {filterContent}
       </Drawer>
     </Box>

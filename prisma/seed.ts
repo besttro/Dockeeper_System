@@ -20,7 +20,7 @@ async function main() {
         mem_fname: "Admin",
         mem_lname: "Dockeeper",
         mem_phone: "0000000000",
-        mem_type: 0,
+        mem_type: 0, // 0=admin, 1=officer, 2=professor
       },
       {
         mem_id: 2,
